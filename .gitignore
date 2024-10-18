@@ -5,5 +5,5 @@ ipch/
 *.sln.old
 *.sdf
 *.opensdf
-build/
+build*/
 *~
