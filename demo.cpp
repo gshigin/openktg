@@ -7,7 +7,7 @@
 
 
 #include <stdio.h>
-#include "gentexture.hpp"
+#include <openktg/gentexture.h>
 
 #include <ratio>
 #include <chrono>

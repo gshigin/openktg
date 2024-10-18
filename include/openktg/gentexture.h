@@ -8,7 +8,7 @@
 #ifndef __TP_GENTEXTURE_HPP_
 #define __TP_GENTEXTURE_HPP_
 
-#include "types.hpp"
+#include <openktg/types.h>
 
 // Pixel. Uses whole 16bit value range (0-65535).
 // 0=>0.0, 65535=>1.0.
