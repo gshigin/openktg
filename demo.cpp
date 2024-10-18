@@ -5,31 +5,12 @@
 /***                                                                      ***/
 /****************************************************************************/
 
-#define _CRT_SECURE_NO_WARNINGS
 
 #include <stdio.h>
 #include "gentexture.hpp"
 
-#ifdef _WIN32
-  #pragma comment(lib,"winmm.lib")
-  #include <windows.h>
-#else
-  #include <sys/time.h>
-  static long timeGetTime()
-  {
-      timeval tim;
-      gettimeofday(&tim, NULL);
-      return tim.tv_sec * 1000000 + tim.tv_usec / 10;
-  }
-  static int timeBeginPeriod(unsigned int period)
-  {
-      return 0;
-  }
-  static int timeEndPeriod(unsigned int period)
-  {
-      return 0;
-  }
-#endif
+#include <ratio>
+#include <chrono>
 
 // 4x4 matrix multiply
 static void MatMult(Matrix44 &dest,const Matrix44 &a,const Matrix44 &b)
@@ -221,8 +202,10 @@ int main(int argc,char **argv)
   black.Init(0,0,0,255);
   white.Init(255,255,255,255);
 
-  timeBeginPeriod(1);
-  sInt startTime = timeGetTime();
+  //timeBeginPeriod(1);
+  //sInt startTime = timeGetTime();
+
+  auto startTime = std::chrono::high_resolution_clock::now();
 
   for(sInt i=0;i<100;i++)
   {
@@ -328,10 +311,14 @@ int main(int argc,char **argv)
     finalTex.Paste(finalTex,rect2x,0.0f,0.0f,1.0f,0.0f,0.0f,1.0f,GenTexture::CombineMultiply,0);
   }
 
-  sInt totalTime = timeGetTime() - startTime;
-  timeEndPeriod(1);
+  //sInt totalTime = timeGetTime() - startTime;
+  //timeEndPeriod(1);
 
-  printf("%d ms/tex\n",totalTime / 100);
+  auto endTime = std::chrono::high_resolution_clock::now();
+
+  using milliseconds = std::chrono::duration<double, std::milli>;
+
+  printf("%f ms/tex\n", std::chrono::duration_cast<milliseconds>(endTime - startTime).count() / 100);
 
   /*SaveImage(baseTex,"baseTex.tga");
   SaveImage(finalTex,"final.tga");*/
