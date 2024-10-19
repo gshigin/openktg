@@ -11,46 +11,36 @@
 #ifndef __TP_TYPES_HPP__
 #define __TP_TYPES_HPP__
 
-#include <stdlib.h>
-#include <string.h>
-#include <assert.h>
-#include <math.h>
-#include <stdint.h>
-
-#ifdef _MSC_VER                              // microsoft C++
-
-#pragma warning (disable: 4244)              // conversion from 'a' to 'b', possible loss of data
-
-#define sINLINE                   __forceinline           // use this to inline
-
-#endif
-
-#ifdef __GNUC__                             // GNU C++
-
-#define sINLINE                   __inline__
-
-#endif
+#include <cassert>
+#include <cmath>
+#include <cstring>
+#include <cstdint>
+#include <algorithm>
+#include <numbers>
 
 /****************************************************************************/
 /***                                                                      ***/
 /***   Basic Types and Functions                                          ***/
 /***                                                                      ***/
 /****************************************************************************/
-typedef uint8_t  sU8;   // for packed arrays
-typedef uint16_t sU16;  // for packed arrays
-typedef uint32_t sU32;  // for packed arrays and bitfields
-typedef uint64_t sU64;  // use as needed
-typedef int8_t   sS8;   // for packed arrays
-typedef int16_t  sS16;  // for packed arrays
-typedef int32_t  sS32;  // for packed arrays
-typedef int64_t  sS64;  // use as needed
-typedef int      sInt;  // use this most
-typedef intptr_t sDInt; // type for pointer diff
 
-typedef float    sF32;  // basic floatingpoint
-typedef double   sF64;  // use as needed
+// remove most in favour of built-in types
 
-typedef bool     sBool; // use for boolean function results
+using sU8   = std::uint8_t;   // for packed arrays
+using sU16  = std::uint16_t;  // for packed arrays
+using sU32  = std::uint32_t;  // for packed arrays and bitfields
+using sU64  = std::uint64_t;  // use as needed
+using sS8   = std::int8_t;    // for packed arrays
+using sS16  = std::int16_t;   // for packed arrays
+using sS32  = std::int32_t;   // for packed arrays
+using sS64  = std::int64_t;   // use as needed
+using sInt  = int;            // use this most
+using sDInt = std::ptrdiff_t; // type for pointer diff
+
+using sF32 = float;           // basic floating point
+using sF64 = double;          // use as needed
+
+using sBool = bool;           // use for boolean function results
 
 /****************************************************************************/
 
@@ -59,52 +49,75 @@ typedef bool     sBool; // use for boolean function results
 
 /****************************************************************************/
 
-template <class Type> sINLINE Type sMin(Type a,Type b)              {return (a<b) ? a : b;}
-template <class Type> sINLINE Type sMax(Type a,Type b)              {return (a>b) ? a : b;}
-template <class Type> sINLINE Type sSign(Type a)                    {return (a==0) ? Type(0) : (a>0) ? Type(1) : Type(-1);}
-template <class Type> sINLINE Type sClamp(Type a,Type min,Type max) {return (a>=max) ? max : (a<=min) ? min : a;}
-template <class Type> sINLINE void sSwap(Type &a,Type &b)           {Type s; s=a; a=b; b=s;}
-template <class Type> sINLINE Type sAlign(Type a,sInt b)            {return (Type)((((sDInt)a)+b-1)&(~(b-1)));}
+template <class T> constexpr T sMin(T a, T b) 
+{
+    return (a < b) ? a : b;
+}
 
-template <class Type> sINLINE Type sSquare(Type a)                  {return a*a;}
+template <class T> constexpr T sMax(T a, T b)              
+{
+    return (a > b) ? a : b;
+}
+
+template <class T> constexpr T sSign(T a) 
+{
+    return (a == 0) ? static_cast<T>(0) : (a > 0) ? static_cast<T>(1) : static_cast<T>(-1);
+}
+
+template <class T> constexpr T sClamp(T a, T min, T max) 
+{
+    return std::clamp(a, min, max);
+}
+
+template <class T> constexpr void sSwap(T &a,T &b)
+{ 
+    std::swap(a, b); 
+}
+
+template <class T> constexpr T sAlign(T a, T b) 
+{
+    return (T)((((sDInt)a) + b - 1) & (~(b - 1)));
+}
+
+template <class T> constexpr T sSquare(T a)                  {return a * a;}
 
 /****************************************************************************/
 
-#define sPI     3.1415926535897932384626433832795
-#define sPI2    6.28318530717958647692528676655901
-#define sPIF    3.1415926535897932384626433832795f
-#define sPI2F   6.28318530717958647692528676655901f
-#define sSQRT2  1.4142135623730950488016887242097
-#define sSQRT2F 1.4142135623730950488016887242097f
+constexpr double sPI = std::numbers::pi_v<double>;
+constexpr double sPI2 = 2 * sPI;
+constexpr float sPIF = std::numbers::pi_v<float>;
+constexpr float  sPI2F = 2 * sPIF;
+constexpr double sSQRT2 = std::numbers::sqrt2_v<double>;
+constexpr float sSQRT2F = std::numbers::sqrt2_v<float>;
 
-sINLINE sInt sAbs(sInt i)                                  { return abs(i); }
-sINLINE void sSetMem(void *dd,sInt s,sInt c)               { memset(dd,s,c); }
-sINLINE void sCopyMem(void *dd,const void *ss,sInt c)      { memcpy(dd,ss,c); }
-sINLINE sInt sCmpMem(const void *dd,const void *ss,sInt c) { return (sInt)memcmp(dd,ss,c); }
+inline sInt sAbs(sInt i)                                  { return std::abs(i); }
+inline void sSetMem(void *dd,sInt s,sInt c)               { std::memset(dd,s,c); }
+inline void sCopyMem(void *dd,const void *ss,sInt c)      { std::memcpy(dd,ss,c); }
+inline sInt sCmpMem(const void *dd,const void *ss,sInt c) { return std::memcmp(dd,ss,c); }
 
-sINLINE sF64 sFATan(sF64 f)         { return atan(f); }
-sINLINE sF64 sFATan2(sF64 a,sF64 b) { return atan2(a,b); }
-sINLINE sF64 sFCos(sF64 f)          { return cos(f); }
-sINLINE sF64 sFAbs(sF64 f)          { return fabs(f); }
-sINLINE sF64 sFLog(sF64 f)          { return log(f); }
-sINLINE sF64 sFLog10(sF64 f)        { return log10(f); }
-sINLINE sF64 sFSin(sF64 f)          { return sin(f); }
-sINLINE sF64 sFSqrt(sF64 f)         { return sqrt(f); }
-sINLINE sF64 sFTan(sF64 f)          { return tan(f); }
+inline sF64 sFATan(sF64 f)         { return std::atan(f); }
+inline sF64 sFATan2(sF64 a,sF64 b) { return std::atan2(a,b); }
+inline sF64 sFCos(sF64 f)          { return std::cos(f); }
+inline sF64 sFAbs(sF64 f)          { return std::fabs(f); }
+inline sF64 sFLog(sF64 f)          { return std::log(f); }
+inline sF64 sFLog10(sF64 f)        { return std::log10(f); }
+inline sF64 sFSin(sF64 f)          { return std::sin(f); }
+inline sF64 sFSqrt(sF64 f)         { return std::sqrt(f); }
+inline sF64 sFTan(sF64 f)          { return std::tan(f); }
 
-sINLINE sF64 sFACos(sF64 f)         { return acos(f); }
-sINLINE sF64 sFASin(sF64 f)         { return asin(f); }
-sINLINE sF64 sFCosH(sF64 f)         { return cosh(f); }
-sINLINE sF64 sFSinH(sF64 f)         { return sinh(f); }
-sINLINE sF64 sFTanH(sF64 f)         { return tanh(f); }
+inline sF64 sFACos(sF64 f)         { return std::acos(f); }
+inline sF64 sFASin(sF64 f)         { return std::asin(f); }
+inline sF64 sFCosH(sF64 f)         { return std::cosh(f); }
+inline sF64 sFSinH(sF64 f)         { return std::sinh(f); }
+inline sF64 sFTanH(sF64 f)         { return std::tanh(f); }
 
-sINLINE sF64 sFInvSqrt(sF64 f)      { return 1.0/sqrt(f); }
+inline sF64 sFInvSqrt(sF64 f)      { return 1.0/std::sqrt(f); }
 
-sINLINE sF64 sFFloor(sF64 f)        { return floor(f); }
+inline sF64 sFFloor(sF64 f)        { return std::floor(f); }
 
-sINLINE sF64 sFPow(sF64 a,sF64 b)   { return pow(a,b); }
-sINLINE sF64 sFMod(sF64 a,sF64 b)   { return fmod(a,b); }
-sINLINE sF64 sFExp(sF64 f)          { return exp(f); }
+inline sF64 sFPow(sF64 a,sF64 b)   { return std::pow(a,b); }
+inline sF64 sFMod(sF64 a,sF64 b)   { return std::fmod(a,b); }
+inline sF64 sFExp(sF64 f)          { return std::exp(f); }
 
 /****************************************************************************/
 /***                                                                      ***/
@@ -117,4 +130,4 @@ sINLINE sF64 sFExp(sF64 f)          { return exp(f); }
 
 /****************************************************************************/
 
-#endif
+#endif // __TP_TYPES_HPP__
