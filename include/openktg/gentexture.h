@@ -9,6 +9,7 @@
 #define __TP_GENTEXTURE_HPP_
 
 #include <openktg/types.h>
+// #include <openktg/pixel.h>
 
 // Pixel. Uses whole 16bit value range (0-65535).
 // 0=>0.0, 65535=>1.0.
@@ -19,6 +20,7 @@ union Pixel
     sU16 r,g,b,a; // OpenGL byte order
   };
   sU64 v;         // the whole value
+  //openktg::pixel p;
 
   void Init(sU8 r,sU8 g,sU8 b,sU8 a);
   void Init(sU32 rgba); // 0xaarrggbb (D3D style)

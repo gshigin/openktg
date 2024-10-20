@@ -219,12 +219,12 @@ int main(int argc,char **argv)
     noise.Init(256,256);
     noise.Noise(gradBW,2,2,6,0.5f,123,GenTexture::NoiseDirect|GenTexture::NoiseBandlimit|GenTexture::NoiseNormalize);
 
-    /*// save test image
+    // save test image
     if(!SaveImage(noise,"noise.tga"))
     {
       printf("Couldn't write 'noise.tga'!\n");
       return 1;
-    }*/
+    }
 
     // 4 "random voronoi" textures with different minimum distances
     GenTexture voro[4];
@@ -309,6 +309,9 @@ int main(int argc,char **argv)
 
     // Multiply it over
     finalTex.Paste(finalTex,rect2x,0.0f,0.0f,1.0f,0.0f,0.0f,1.0f,GenTexture::CombineMultiply,0);
+
+    SaveImage(baseTex,"baseTex.tga");
+    SaveImage(finalTex,"final.tga");
   }
 
   //sInt totalTime = timeGetTime() - startTime;
