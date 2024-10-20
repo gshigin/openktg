@@ -13,7 +13,7 @@ project(openktg
 
 add_library(${PROJECT_NAME} 
     src/gentexture.cpp
-    # src/pixel.cpp
+    src/pixel.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC
@@ -21,13 +21,13 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 
-# install(TARGETS OpenKTG ARCHIVE DESTINATION lib)
-# install(FILES ${openKTG_HEADERS} DESTINATION include/OpenKTG)
-
-# set(openKTG_DOC_FILES LICENSE README.txt)
-# install(FILES ${openKTG_DOC_FILES} DESTINATION share/doc/OpenKTG)
-
-#
 # demo executable
 add_executable(demo demo.cpp)
 target_link_libraries(demo openktg)
+
+option(ENABLE_TESTS "Enable building tests" ON)
+
+if(ENABLE_TESTS)
+    enable_testing()
+    add_subdirectory(tests)
+endif()

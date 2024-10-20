@@ -1,24 +1,6 @@
 #include <openktg/pixel.h>
 #include <openktg/types.h>
-
-namespace utils
-{
-    // Linearly interpolate between a and b with t=0..65536 [0,1]
-    // 0 <= a, b < 65536.
-    constexpr int lerp(std::uint16_t a, std::uint16_t b, std::uint32_t t)
-    {
-        return a + ((t * (b - a)) >> 16);
-    }
-
-    // Multiply intensities.
-    // Returns the result of round(a*b/65535.0)
-    constexpr std::uint16_t mulIntens(std::uint16_t a, std::uint16_t b)
-    {
-        // 0x8000 added for right rounding
-        std::uint32_t x = static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b) + 0x8000;
-        return (x + (x >> 16)) >> 16;
-    }
-}
+#include <openktg/utility.h>
 
 namespace openktg
 {
@@ -38,17 +20,17 @@ namespace openktg
         av = (rgba >> 24) & 0xff;
 
         a_ = (av << 8) | av;
-        r_ = utils::mulIntens((rv << 8) | rv, a_);
-        g_ = utils::mulIntens((gv << 8) | gv, a_);
-        b_ = utils::mulIntens((bv << 8) | bv, a_);
+        r_ = utility::mult_intens((rv << 8) | rv, a_);
+        g_ = utility::mult_intens((gv << 8) | gv, a_);
+        b_ = utility::mult_intens((bv << 8) | bv, a_);
     }
 
     pixel& pixel::lerp(pixel other, uint16_t t)
     {
-        r_ = utils::lerp(r_, other.r_, t);
-        g_ = utils::lerp(g_, other.g_, t);
-        b_ = utils::lerp(b_, other.b_, t);
-        a_ = utils::lerp(a_, other.a_, t);
+        r_ = utility::lerp(r_, other.r_, t);
+        g_ = utility::lerp(g_, other.g_, t);
+        b_ = utility::lerp(b_, other.b_, t);
+        a_ = utility::lerp(a_, other.a_, t);
 
         return *this;
     }
@@ -65,10 +47,10 @@ namespace openktg
 
     pixel& pixel::compositeMulC(pixel other)
     {
-        r_ = utils::mulIntens(r_, other.r_);
-        g_ = utils::mulIntens(g_, other.g_);
-        b_ = utils::mulIntens(b_, other.b_);
-        a_ = utils::mulIntens(a_, other.a_);
+        r_ = utility::mult_intens(r_, other.r_);
+        g_ = utility::mult_intens(g_, other.g_);
+        b_ = utility::mult_intens(b_, other.b_);
+        a_ = utility::mult_intens(a_, other.a_);
 
         return *this;
     }
@@ -76,20 +58,20 @@ namespace openktg
     pixel& pixel::compositeROver(pixel other)
     {
         std::uint16_t transIn = 65535 - other.a_;
-        r_ = utils::mulIntens(transIn, r_) + other.r_;
-        g_ = utils::mulIntens(transIn, g_) + other.g_;
-        b_ = utils::mulIntens(transIn, b_) + other.b_;
-        a_ = utils::mulIntens(transIn, a_) + other.a_;
+        r_ = utility::mult_intens(transIn, r_) + other.r_;
+        g_ = utility::mult_intens(transIn, g_) + other.g_;
+        b_ = utility::mult_intens(transIn, b_) + other.b_;
+        a_ = utility::mult_intens(transIn, a_) + other.a_;
 
         return *this;
     }
 
     pixel& pixel::compositeScreen(pixel other)
     {
-        r_ += utils::mulIntens(other.r_, 65535 - r_);
-        g_ += utils::mulIntens(other.g_, 65535 - g_);
-        b_ += utils::mulIntens(other.b_, 65535 - b_);
-        a_ += utils::mulIntens(other.a_, 65535 - a_);
+        r_ += utility::mult_intens(other.r_, 65535 - r_);
+        g_ += utility::mult_intens(other.g_, 65535 - g_);
+        b_ += utility::mult_intens(other.b_, 65535 - b_);
+        a_ += utility::mult_intens(other.a_, 65535 - a_);
 
         return *this;
     }

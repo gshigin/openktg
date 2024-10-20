@@ -1,6 +1,9 @@
 #pragma once
 
+#include <openktg/utility.h>
+
 #include <cstdint>
+#include <algorithm>
 
 namespace openktg
 {   
