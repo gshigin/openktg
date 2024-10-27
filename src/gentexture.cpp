@@ -734,25 +734,26 @@ void GenTexture::ColorMatrixTransform(const GenTexture &x,const Matrix44 &matrix
   {
     Pixel &out = Data[i];
     const Pixel &in = x.Data[i];
+    { // TODO :: One matrix-pixel operation
+      sInt r = MulShift16(m[0][0],in.r) + MulShift16(m[0][1],in.g) + MulShift16(m[0][2],in.b) + MulShift16(m[0][3],in.a);
+      sInt g = MulShift16(m[1][0],in.r) + MulShift16(m[1][1],in.g) + MulShift16(m[1][2],in.b) + MulShift16(m[1][3],in.a);
+      sInt b = MulShift16(m[2][0],in.r) + MulShift16(m[2][1],in.g) + MulShift16(m[2][2],in.b) + MulShift16(m[2][3],in.a);
+      sInt a = MulShift16(m[3][0],in.r) + MulShift16(m[3][1],in.g) + MulShift16(m[3][2],in.b) + MulShift16(m[3][3],in.a);
 
-    sInt r = MulShift16(m[0][0],in.r) + MulShift16(m[0][1],in.g) + MulShift16(m[0][2],in.b) + MulShift16(m[0][3],in.a);
-    sInt g = MulShift16(m[1][0],in.r) + MulShift16(m[1][1],in.g) + MulShift16(m[1][2],in.b) + MulShift16(m[1][3],in.a);
-    sInt b = MulShift16(m[2][0],in.r) + MulShift16(m[2][1],in.g) + MulShift16(m[2][2],in.b) + MulShift16(m[2][3],in.a);
-    sInt a = MulShift16(m[3][0],in.r) + MulShift16(m[3][1],in.g) + MulShift16(m[3][2],in.b) + MulShift16(m[3][3],in.a);
-
-    if(clampPremult)
-    {
-      out.a = sClamp<sInt>(a,0,65535);
-      out.r = sClamp<sInt>(r,0,out.a);
-      out.g = sClamp<sInt>(g,0,out.a);
-      out.b = sClamp<sInt>(b,0,out.a);
-    }
-    else
-    {
-      out.r = sClamp<sInt>(r,0,65535);
-      out.g = sClamp<sInt>(g,0,65535);
-      out.b = sClamp<sInt>(b,0,65535);
-      out.a = sClamp<sInt>(a,0,65535);
+      if(clampPremult) // pixel& clampPremult(bool clamp_by_alpha);
+      {
+        out.a = sClamp<sInt>(a,0,65535);
+        out.r = sClamp<sInt>(r,0,out.a);
+        out.g = sClamp<sInt>(g,0,out.a);
+        out.b = sClamp<sInt>(b,0,out.a);
+      }
+      else
+      {
+        out.r = sClamp<sInt>(r,0,65535);
+        out.g = sClamp<sInt>(g,0,65535);
+        out.b = sClamp<sInt>(b,0,65535);
+        out.a = sClamp<sInt>(a,0,65535);
+      }
     }
   }
 }

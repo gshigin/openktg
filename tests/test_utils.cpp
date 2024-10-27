@@ -26,12 +26,14 @@ TEST_CASE("Test lerp", "[utils]") {
         std::uint16_t a = GENERATE(range(0, 65535, 4096));
         std::uint16_t b = GENERATE(range(0, 65535, 4096));
         REQUIRE(static_cast<std::uint16_t>(legacy::Lerp(t, a, b)) == utility::lerp(a, b, t));
+        REQUIRE(utility::lerp(b, a, 0x10000 - t) == utility::lerp(a, b, t));
     }
     SECTION("Random") {
         std::uint32_t t = GENERATE(take(16, random(0, 65536)));
         std::uint16_t a = GENERATE(take(16, random(0, 65535)));
         std::uint16_t b = GENERATE(take(16, random(0, 65535)));
-        CHECK(static_cast<std::uint16_t>(legacy::Lerp(t, a, b)) == utility::lerp(a, b, t));
+        REQUIRE(static_cast<std::uint16_t>(legacy::Lerp(t, a, b)) == utility::lerp(a, b, t));
+        REQUIRE(utility::lerp(b, a, 0x10000 - t) == utility::lerp(a, b, t));
     }
 }
 
@@ -40,10 +42,12 @@ TEST_CASE("Test mult_intens", "[utils]") {
         std::uint16_t a = GENERATE(range(0, 65535, 4096));
         std::uint16_t b = GENERATE(range(0, 65535, 4096));
         REQUIRE(static_cast<std::uint16_t>(legacy::MulIntens(a, b)) == utility::mult_intens(a, b));
+        REQUIRE(utility::mult_intens(a, b) == utility::mult_intens(b, a));
     }
     SECTION("Random") {
         std::uint16_t a = GENERATE(take(16, random(0, 65535)));
         std::uint16_t b = GENERATE(take(16, random(0, 65535)));
         REQUIRE(static_cast<std::uint16_t>(legacy::MulIntens(a, b)) == utility::mult_intens(a, b));
+        REQUIRE(utility::mult_intens(a, b) == utility::mult_intens(b, a));
     }
 }
