@@ -9,26 +9,7 @@
 #define __TP_GENTEXTURE_HPP_
 
 #include <openktg/types.h>
-
-// Pixel. Uses whole 16bit value range (0-65535).
-// 0=>0.0, 65535=>1.0.
-union Pixel {
-    struct
-    {
-        sU16 r, g, b, a; // OpenGL byte order
-    };
-    sU64 v; // the whole value
-
-    void Init(sU8 r, sU8 g, sU8 b, sU8 a);
-    void Init(sU32 rgba); // 0xaarrggbb (D3D style)
-
-    void Lerp(sInt t, const Pixel &x, const Pixel &y); // t=0..65536
-
-    void CompositeAdd(const Pixel &b);
-    void CompositeMulC(const Pixel &b);
-    void CompositeROver(const Pixel &b);
-    void CompositeScreen(const Pixel &b);
-};
+#include <openktg/pixel.h>
 
 // CellCenter. 2D pair of coordinates plus a cell color.
 struct CellCenter

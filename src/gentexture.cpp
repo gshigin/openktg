@@ -5,70 +5,8 @@
 /***                                                                      ***/
 /****************************************************************************/
 
-#include "openktg/gentexture.h"
-
-/****************************************************************************/
-/***                                                                      ***/
-/***   Helpers                                                            ***/
-/***                                                                      ***/
-/****************************************************************************/
-
-// Return sTRUE if x is a power of 2, sFALSE otherwise
-static sBool IsPowerOf2(sInt x)
-{
-    return (x & (x - 1)) == 0;
-}
-
-// Returns floor(log2(x))
-static sInt FloorLog2(sInt x)
-{
-    sInt res = 0;
-
-    if (x & 0xffff0000)
-        x >>= 16, res += 16;
-    if (x & 0x0000ff00)
-        x >>= 8, res += 8;
-    if (x & 0x000000f0)
-        x >>= 4, res += 4;
-    if (x & 0x0000000c)
-        x >>= 2, res += 2;
-    if (x & 0x00000002)
-        res++;
-
-    return res;
-}
-
-// Multiply intensities.
-// Returns the result of round(a*b/65535.0)
-static sU32 MulIntens(sU32 a, sU32 b)
-{
-    sU32 x = a * b + 0x8000;
-    return (x + (x >> 16)) >> 16;
-}
-
-// Returns the result of round(a*b/65536)
-static sInt MulShift16(sInt a, sInt b)
-{
-    return (sS64(a) * sS64(b) + 0x8000) >> 16;
-}
-
-// Returns the result of round(a*b/256)
-static sU32 UMulShift8(sU32 a, sU32 b)
-{
-    return (sU64(a) * sU64(b) + 0x80) >> 8;
-}
-
-// Linearly interpolate between a and b with t=0..65536 [0,1]
-// 0<=a,b<65536.
-static sInt Lerp(sInt t, sInt a, sInt b)
-{
-    return a + ((t * (b - a)) >> 16);
-}
-
-static sF32 LerpF(sF32 t, sF32 a, sF32 b)
-{
-    return a + t * (b - a);
-}
+#include <openktg/gentexture.h>
+#include <openktg/helpers.h>
 
 // Perlin permutation table
 static sU16 Ptable[4096];
@@ -211,76 +149,6 @@ static sF32 GNoise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed)
     }
 
     return sum;
-}
-
-/****************************************************************************/
-/***                                                                      ***/
-/***   Pixel                                                              ***/
-/***                                                                      ***/
-/****************************************************************************/
-
-void Pixel::Init(sU8 _r, sU8 _g, sU8 _b, sU8 _a)
-{
-    r = (_r << 8) | _r;
-    g = (_g << 8) | _g;
-    b = (_b << 8) | _b;
-    a = (_a << 8) | _a;
-}
-
-void Pixel::Init(sU32 rgba)
-{
-    sU8 rv, gv, bv, av;
-
-    rv = (rgba >> 16) & 0xff;
-    gv = (rgba >> 8) & 0xff;
-    bv = (rgba >> 0) & 0xff;
-    av = (rgba >> 24) & 0xff;
-
-    a = (av << 8) | av;
-    r = MulIntens((rv << 8) | rv, a);
-    g = MulIntens((gv << 8) | gv, a);
-    b = MulIntens((bv << 8) | bv, a);
-}
-
-void Pixel::Lerp(sInt t, const Pixel &x, const Pixel &y)
-{
-    r = ::Lerp(t, x.r, y.r);
-    g = ::Lerp(t, x.g, y.g);
-    b = ::Lerp(t, x.b, y.b);
-    a = ::Lerp(t, x.a, y.a);
-}
-
-void Pixel::CompositeAdd(const Pixel &x)
-{
-    r = sClamp<sInt>(r + x.r, 0, 65535);
-    g = sClamp<sInt>(g + x.g, 0, 65535);
-    b = sClamp<sInt>(b + x.b, 0, 65535);
-    a = sClamp<sInt>(a + x.a, 0, 65535);
-}
-
-void Pixel::CompositeMulC(const Pixel &x)
-{
-    r = MulIntens(r, x.r);
-    g = MulIntens(g, x.g);
-    b = MulIntens(b, x.b);
-    a = MulIntens(a, x.a);
-}
-
-void Pixel::CompositeROver(const Pixel &x)
-{
-    sInt transIn = 65535 - x.a;
-    r = MulIntens(transIn, r) + x.r;
-    g = MulIntens(transIn, g) + x.g;
-    b = MulIntens(transIn, b) + x.b;
-    a = MulIntens(transIn, a) + x.a;
-}
-
-void Pixel::CompositeScreen(const Pixel &x)
-{
-    r += MulIntens(x.r, 65535 - r);
-    g += MulIntens(x.g, 65535 - g);
-    b += MulIntens(x.b, 65535 - b);
-    a += MulIntens(x.a, 65535 - a);
 }
 
 /****************************************************************************/
