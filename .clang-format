@@ -1,0 +1,5 @@
+---
+Language: Cpp
+Standard: c++20
+BasedOnStyle: microsoft
+ColumnLimit: 160
