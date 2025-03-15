@@ -5,6 +5,7 @@ ipch/
 *.sln.old
 *.sdf
 *.opensdf
-.*
+.cache/*
+.vscode/*
 build*/
 *~
