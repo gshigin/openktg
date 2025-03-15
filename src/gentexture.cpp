@@ -46,7 +46,7 @@ static void InitPerlin()
     qsort(Ptable, 4096, sizeof(*Ptable), InitPerlinCompare);
 
     delete[] Ptemp;
-    Ptemp = 0;
+    Ptemp = nullptr;
 }
 
 // Perlin gradient function
