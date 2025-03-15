@@ -8,12 +8,12 @@ using namespace openktg;
 
 namespace legacy
 {
-    static int Lerp(int t,int a,int b)
+    static auto Lerp(int t,int a,int b) -> int
     {
         return a + ((t * (b-a)) >> 16);
     }
 
-    static std::uint32_t MulIntens(std::uint32_t a,std::uint32_t b)
+    static auto MulIntens(std::uint32_t a,std::uint32_t b) -> std::uint32_t
     {
         std::uint32_t x = a*b + 0x8000;
         return (x + (x >> 16)) >> 16;

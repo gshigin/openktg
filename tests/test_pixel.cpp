@@ -8,7 +8,6 @@
 #include <random>
 
 #include <iostream>
-#include <tuple>
 
 using namespace openktg;
 namespace ut = utility;
@@ -16,7 +15,7 @@ namespace ut = utility;
 namespace Catch {
     template <>
     struct StringMaker<openktg::pixel> {
-        static std::string convert(const openktg::pixel& p) {
+        static auto convert(const openktg::pixel& p) -> std::string {
             std::stringstream stream;
             stream << "0x " << std::hex;
             stream << p.r() << ' ' << p.g() << ' ' << p.b() << ' ' << p.a();
@@ -27,7 +26,7 @@ namespace Catch {
 
 namespace
 {
-    std::uint16_t clamp_mult(std::uint16_t a, std::uint16_t b)
+    auto clamp_mult(std::uint16_t a, std::uint16_t b) -> std::uint16_t
     {
         return std::clamp<std::uint32_t>(static_cast<std::uint32_t>(a) * static_cast<std::uint32_t>(b), 0, 65535);
     }

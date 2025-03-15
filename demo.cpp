@@ -8,8 +8,8 @@
 #include <openktg/gentexture.h>
 
 #include <cassert>
-#include <cstdio>
 #include <chrono>
+#include <cstdio>
 #include <ratio>
 
 // 4x4 matrix multiply
@@ -329,4 +329,3 @@ int main(int argc, char **argv)
 
     return 0;
 }
-

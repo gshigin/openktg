@@ -8,8 +8,8 @@
 #ifndef __TP_GENTEXTURE_HPP_
 #define __TP_GENTEXTURE_HPP_
 
-#include <openktg/types.h>
 #include <openktg/pixel.h>
+#include <openktg/types.h>
 
 // CellCenter. 2D pair of coordinates plus a cell color.
 struct CellCenter

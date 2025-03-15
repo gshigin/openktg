@@ -1,60 +1,77 @@
 #pragma once
 
-#include <openktg/utility.h>
 #include <openktg/types.h>
+#include <openktg/utility.h>
 
 #include <cstdint>
-#include <algorithm>
 
 namespace openktg
-{   
-    class alignas(std::uint64_t) pixel 
+{
+class alignas(std::uint64_t) pixel
+{
+  public:
+    pixel() = default;
+    pixel(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a);
+    pixel(std::uint32_t rgba); // from 0xaarrggbb (D3D style)
+
+    pixel(const pixel &) = default;
+    auto operator=(const pixel &) -> pixel & = default;
+    pixel(pixel &&) noexcept = default;
+    auto operator=(pixel &&) noexcept -> pixel & = default;
+    ~pixel() = default;
+
+    [[nodiscard]] auto r() const -> std::uint16_t
     {
-    public:
-        pixel() = default;
-        pixel(std::uint8_t r, std::uint8_t g, std::uint8_t b, std::uint8_t a);
-        pixel(std::uint32_t rgba); // from 0xaarrggbb (D3D style)
+        return r_;
+    }
+    [[nodiscard]] auto g() const -> std::uint16_t
+    {
+        return g_;
+    }
+    [[nodiscard]] auto b() const -> std::uint16_t
+    {
+        return b_;
+    }
+    [[nodiscard]] auto a() const -> std::uint16_t
+    {
+        return a_;
+    }
 
-        std::uint16_t r() const { return r_; }
-        std::uint16_t g() const { return g_; }
-        std::uint16_t b() const { return b_; }
-        std::uint16_t a() const { return a_; }
+    // combineAdd
+    auto operator+=(pixel) -> pixel &;
+    // combineDub
+    auto operator-=(pixel) -> pixel &;
+    // mulIntens
+    auto operator*=(pixel) -> pixel &;
+    // pixel * scalar
+    auto operator*=(std::uint16_t) -> pixel &;
+    // inverse pixel
+    auto operator~() -> pixel;
 
-        // combineAdd
-        pixel& operator+=(pixel);
-        // combineDub
-        pixel& operator-=(pixel);
-        // mulIntens
-        pixel& operator*=(pixel);
-        // pixel * scalar
-        pixel& operator*=(std::uint16_t);
-        // inverse pixel
-        pixel operator~();
+    auto operator==(pixel) -> bool;
 
-        bool operator==(pixel);
+    auto lerp(pixel, uint16_t) -> pixel &; // t=0..65536
+  private:
+    // OpenGL byte order
+    std::uint16_t r_;
+    std::uint16_t g_;
+    std::uint16_t b_;
+    std::uint16_t a_;
+};
 
-        pixel& lerp (pixel, uint16_t); // t=0..65536
-    private:
-        // OpenGL byte order
-        std::uint16_t r_;
-        std::uint16_t g_;
-        std::uint16_t b_;
-        std::uint16_t a_;  
-    };
+auto operator+(pixel lhs, pixel rhs) -> pixel;
+auto operator-(pixel lhs, pixel rhs) -> pixel;
+auto operator*(pixel lhs, pixel rhs) -> pixel;
+auto operator*(pixel lhs, std::uint16_t) -> pixel;
+auto operator*(std::uint16_t, pixel lhs) -> pixel;
 
-    pixel operator+(pixel lhs, pixel rhs);
-    pixel operator-(pixel lhs, pixel rhs);
-    pixel operator*(pixel lhs, pixel rhs);
-    pixel operator*(pixel lhs, std::uint16_t);
-    pixel operator*(std::uint16_t, pixel lhs);
+auto lerp(pixel lhs, pixel rhs, uint16_t t) -> pixel; // t=0..65536
 
-    pixel lerp(pixel lhs, pixel rhs, uint16_t t); // t=0..65536
-
-    pixel compositeAdd(pixel lhs, pixel rhs);
-    pixel compositeMulC(pixel lhs, pixel rhs);
-    pixel compositeROver(pixel lhs, pixel rhs);
-    pixel compositeScreen(pixel lhs, pixel rhs);
-}
+auto compositeAdd(pixel lhs, pixel rhs) -> pixel;
+auto compositeMulC(pixel lhs, pixel rhs) -> pixel;
+auto compositeROver(pixel lhs, pixel rhs) -> pixel;
+auto compositeScreen(pixel lhs, pixel rhs) -> pixel;
+} // namespace openktg
 
 // Pixel. Uses whole 16bit value range (0-65535).
 // 0=>0.0, 65535=>1.0.
