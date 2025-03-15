@@ -6,8 +6,9 @@
 /****************************************************************************/
 
 #include <openktg/gentexture.h>
-#include <stdio.h>
 
+#include <cassert>
+#include <cstdio>
 #include <chrono>
 #include <ratio>
 
@@ -53,7 +54,7 @@ static void MatRotateZ(Matrix44 &dest, sF32 angle)
 
 // Create a simple linear gradient texture
 // Input colors are 0xaarrggbb (not premultiplied!)
-static GenTexture LinearGradient(sU32 startCol, sU32 endCol)
+static auto LinearGradient(sU32 startCol, sU32 endCol) -> GenTexture
 {
     GenTexture tex;
 
@@ -67,7 +68,7 @@ static GenTexture LinearGradient(sU32 startCol, sU32 endCol)
 // Create a pattern of randomly colored voronoi cells
 static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensity, sInt maxCount, sF32 minDist)
 {
-    sVERIFY(maxCount <= 256);
+    assert(maxCount <= 256);
     CellCenter centers[256];
 
     // generate random center points
@@ -140,7 +141,7 @@ static void Colorize(GenTexture &img, sU32 startCol, sU32 endCol)
 }
 
 // Save an image as .TGA file
-static bool SaveImage(GenTexture &img, const char *filename)
+static auto SaveImage(GenTexture &img, const char *filename) -> bool
 {
     FILE *f = fopen(filename, "wb");
     if (!f)

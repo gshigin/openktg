@@ -30,7 +30,7 @@ struct LinearInput
 };
 
 // Simple 4x4 matrix type
-typedef sF32 Matrix44[4][4];
+using Matrix44 = sF32[4][4];
 
 // X increases from 0 (left) to 1 (right)
 // Y increases from 0 (bottom) to 1 (top)
@@ -56,9 +56,9 @@ struct GenTexture
     void UpdateSize();
     void Swap(GenTexture &x);
 
-    GenTexture &operator=(const GenTexture &x);
+    auto operator=(const GenTexture &x) -> GenTexture &;
 
-    sBool SizeMatchesWith(const GenTexture &x) const;
+    [[nodiscard]] auto SizeMatchesWith(const GenTexture &x) const -> sBool;
 
     // Sampling helpers with filtering (coords are 1.7.24 fixed point)
     void SampleNearest(Pixel &result, sInt x, sInt y, sInt wrapMode) const;

@@ -5,6 +5,8 @@
 /***                                                                      ***/
 /****************************************************************************/
 
+#include <cassert>
+
 #include <openktg/gentexture.h>
 #include <openktg/helpers.h>
 
@@ -18,7 +20,7 @@ static sInt P(sInt i)
 }
 
 // Initialize perlin
-static int InitPerlinCompare(const void *e1, const void *e2)
+static auto InitPerlinCompare(const void *e1, const void *e2) -> int
 {
     unsigned i1 = Ptemp[*((sU16 *)e1)];
     unsigned i2 = Ptemp[*((sU16 *)e2)];
@@ -48,7 +50,7 @@ static void InitPerlin()
 }
 
 // Perlin gradient function
-static sF32 PGradient2(sInt hash, sF32 x, sF32 y)
+static auto PGradient2(sInt hash, sF32 x, sF32 y) -> sF32
 {
     hash &= 7;
     sF32 u = hash < 4 ? x : y;
@@ -58,13 +60,13 @@ static sF32 PGradient2(sInt hash, sF32 x, sF32 y)
 }
 
 // Perlin smoothstep function
-static sF32 SmoothStep(sF32 x)
+static auto SmoothStep(sF32 x) -> sF32
 {
     return x * x * x * (10 + x * (6 * x - 15));
 }
 
 // 2D non-bandlimited noise function
-static sF32 Noise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed)
+static auto Noise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed) -> sF32
 {
     static const sInt M = 0x10000;
 
@@ -83,7 +85,7 @@ static sF32 Noise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed)
 }
 
 // 2D Perlin noise function
-static sF32 PNoise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed)
+static auto PNoise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed) -> sF32
 {
     static const sInt M = 0x10000;
     static const sF32 S = sFInvSqrt(5.0f);
@@ -103,7 +105,7 @@ static sF32 PNoise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed)
                            PGradient2((P(((X + 1) & maskx) + P(((Y + 1) & masky)) + seed)), fx - 1.0f, fy - 1.0f)));
 }
 
-static sInt GShuffle(sInt x, sInt y, sInt z)
+static auto GShuffle(sInt x, sInt y, sInt z) -> sInt
 {
     /*sU32 seed = ((x & 0x3ff) << 20) | ((y & 0x3ff) << 10) | (z & 0x3ff);
 
@@ -120,7 +122,7 @@ static sInt GShuffle(sInt x, sInt y, sInt z)
 }
 
 // 2D grid noise function (tiling)
-static sF32 GNoise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed)
+static auto GNoise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed) -> sF32
 {
     // input coordinates
     sInt i = x >> 16;
@@ -196,8 +198,8 @@ void GenTexture::Init(sInt xres, sInt yres)
     {
         delete[] Data;
 
-        sVERIFY(IsPowerOf2(xres));
-        sVERIFY(IsPowerOf2(yres));
+        assert(IsPowerOf2(xres));
+        assert(IsPowerOf2(yres));
 
         XRes = xres;
         YRes = yres;
@@ -306,7 +308,7 @@ void GenTexture::SampleGradient(Pixel &result, sInt x) const
 
 void GenTexture::Noise(const GenTexture &grad, sInt freqX, sInt freqY, sInt oct, sF32 fadeoff, sInt seed, sInt mode)
 {
-    sVERIFY(oct > 0);
+    assert(oct > 0);
 
     seed = P(seed);
 
@@ -368,7 +370,7 @@ void GenTexture::Noise(const GenTexture &grad, sInt freqX, sInt freqY, sInt oct,
 
 void GenTexture::GlowRect(const GenTexture &bgTex, const GenTexture &grad, sF32 orgx, sF32 orgy, sF32 ux, sF32 uy, sF32 vx, sF32 vy, sF32 rectu, sF32 rectv)
 {
-    sVERIFY(SizeMatchesWith(bgTex));
+    assert(SizeMatchesWith(bgTex));
 
     // copy background over (if we're not the background texture already)
     if (this != &bgTex)
@@ -453,7 +455,7 @@ struct CellPoint
 
 void GenTexture::Cells(const GenTexture &grad, const CellCenter *centers, sInt nCenters, sF32 amp, sInt mode)
 {
-    sVERIFY(((mode & 1) == 0) ? nCenters >= 1 : nCenters >= 2);
+    assert(((mode & 1) == 0) ? nCenters >= 1 : nCenters >= 2);
 
     Pixel *out = Data;
     CellPoint *points = NULL;
@@ -582,13 +584,13 @@ void GenTexture::ColorMatrixTransform(const GenTexture &x, const Matrix44 &matri
 {
     sInt m[4][4];
 
-    sVERIFY(SizeMatchesWith(x));
+    assert(SizeMatchesWith(x));
 
     for (sInt i = 0; i < 4; i++)
     {
         for (sInt j = 0; j < 4; j++)
         {
-            sVERIFY(matrix[i][j] >= -127.0f && matrix[i][j] <= 127.0f);
+            assert(matrix[i][j] >= -127.0f && matrix[i][j] <= 127.0f);
             m[i][j] = matrix[i][j] * 65536.0f;
         }
     }
@@ -655,7 +657,7 @@ void GenTexture::CoordMatrixTransform(const GenTexture &in, const Matrix44 &matr
 
 void GenTexture::ColorRemap(const GenTexture &inTex, const GenTexture &mapR, const GenTexture &mapG, const GenTexture &mapB)
 {
-    sVERIFY(SizeMatchesWith(inTex));
+    assert(SizeMatchesWith(inTex));
 
     for (sInt i = 0; i < NPixels; i++)
     {
@@ -696,7 +698,7 @@ void GenTexture::ColorRemap(const GenTexture &inTex, const GenTexture &mapR, con
 
 void GenTexture::CoordRemap(const GenTexture &in, const GenTexture &remapTex, sF32 strengthU, sF32 strengthV, sInt mode)
 {
-    sVERIFY(SizeMatchesWith(remapTex));
+    assert(SizeMatchesWith(remapTex));
 
     const Pixel *remap = remapTex.Data;
     Pixel *out = Data;
@@ -730,7 +732,7 @@ void GenTexture::CoordRemap(const GenTexture &in, const GenTexture &remapTex, sF
 
 void GenTexture::Derive(const GenTexture &in, DeriveOp op, sF32 strength)
 {
-    sVERIFY(SizeMatchesWith(in));
+    assert(SizeMatchesWith(in));
 
     Pixel *out = Data;
 
@@ -781,11 +783,11 @@ static sInt WrapCoord(sInt x, sInt width, sInt mode)
 // Size is half of edge length in pixels, 26.6 fixed point
 static void Blur1DBuffer(Pixel *dst, const Pixel *src, sInt width, sInt sizeFixed, sInt wrapMode)
 {
-    sVERIFY(sizeFixed > 32); // kernel should be wider than one pixel
+    assert(sizeFixed > 32); // kernel should be wider than one pixel
     sInt frac = (sizeFixed - 32) & 63;
     sInt offset = (sizeFixed + 32) >> 6;
 
-    sVERIFY(((offset - 1) * 64 + frac + 32) == sizeFixed);
+    assert(((offset - 1) * 64 + frac + 32) == sizeFixed);
     sU32 denom = sizeFixed * 2;
     sU32 bias = denom / 2;
 
@@ -863,7 +865,7 @@ static void Blur1DBuffer(Pixel *dst, const Pixel *src, sInt width, sInt sizeFixe
 
 void GenTexture::Blur(const GenTexture &inImg, sF32 sizex, sF32 sizey, sInt order, sInt wrapMode)
 {
-    sVERIFY(SizeMatchesWith(inImg));
+    assert(SizeMatchesWith(inImg));
 
     sInt sizePixX = sClamp(sizex, 0.0f, 1.0f) * 64 * inImg.XRes / 2;
     sInt sizePixY = sClamp(sizey, 0.0f, 1.0f) * 64 * inImg.YRes / 2;
@@ -945,7 +947,7 @@ void GenTexture::Blur(const GenTexture &inImg, sF32 sizex, sF32 sizey, sInt orde
 
 void GenTexture::Ternary(const GenTexture &in1Tex, const GenTexture &in2Tex, const GenTexture &in3Tex, TernaryOp op)
 {
-    sVERIFY(SizeMatchesWith(in1Tex) && SizeMatchesWith(in2Tex) && SizeMatchesWith(in3Tex));
+    assert(SizeMatchesWith(in1Tex) && SizeMatchesWith(in2Tex) && SizeMatchesWith(in3Tex));
 
     for (sInt i = 0; i < NPixels; i++)
     {
@@ -972,7 +974,7 @@ void GenTexture::Ternary(const GenTexture &in1Tex, const GenTexture &in2Tex, con
 
 void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 orgx, sF32 orgy, sF32 ux, sF32 uy, sF32 vx, sF32 vy, CombineOp op, sInt mode)
 {
-    sVERIFY(SizeMatchesWith(bgTex));
+    assert(SizeMatchesWith(bgTex));
 
     // copy background over (if this image is not the background already)
     if (this != &bgTex)
@@ -1117,7 +1119,7 @@ void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 or
 void GenTexture::Bump(const GenTexture &surface, const GenTexture &normals, const GenTexture *specular, const GenTexture *falloffMap, sF32 px, sF32 py, sF32 pz,
                       sF32 dx, sF32 dy, sF32 dz, const Pixel &ambient, const Pixel &diffuse, sBool directional)
 {
-    sVERIFY(SizeMatchesWith(surface) && SizeMatchesWith(normals));
+    assert(SizeMatchesWith(surface) && SizeMatchesWith(normals));
 
     sF32 L[3], H[3]; // light/halfway vector
     sF32 invX, invY;
@@ -1226,15 +1228,15 @@ void GenTexture::LinearCombine(const Pixel &color, sF32 constWeight, const Linea
 {
     sInt w[256], uo[256], vo[256];
 
-    sVERIFY(nInputs <= 255);
-    sVERIFY(constWeight >= -127.0f && constWeight <= 127.0f);
+    assert(nInputs <= 255);
+    assert(constWeight >= -127.0f && constWeight <= 127.0f);
 
     // convert weights and offsets to fixed point
     for (sInt i = 0; i < nInputs; i++)
     {
-        sVERIFY(inputs[i].Weight >= -127.0f && inputs[i].Weight <= 127.0f);
-        sVERIFY(inputs[i].UShift >= -127.0f && inputs[i].UShift <= 127.0f);
-        sVERIFY(inputs[i].VShift >= -127.0f && inputs[i].VShift <= 127.0f);
+        assert(inputs[i].Weight >= -127.0f && inputs[i].Weight <= 127.0f);
+        assert(inputs[i].UShift >= -127.0f && inputs[i].UShift <= 127.0f);
+        assert(inputs[i].VShift >= -127.0f && inputs[i].VShift <= 127.0f);
 
         w[i] = inputs[i].Weight * 65536.0f;
         uo[i] = inputs[i].UShift * (1 << 24);

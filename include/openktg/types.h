@@ -12,7 +12,6 @@
 #define __TP_TYPES_HPP__
 
 #include <algorithm>
-#include <cassert>
 #include <cmath>
 #include <cstdint>
 #include <cstring>
@@ -49,37 +48,37 @@ using sBool = bool; // use for boolean function results
 
 /****************************************************************************/
 
-template <class T> constexpr T sMin(T a, T b)
+template <class T> constexpr auto sMin(T a, T b) noexcept -> T
 {
     return (a < b) ? a : b;
 }
 
-template <class T> constexpr T sMax(T a, T b)
+template <class T> constexpr auto sMax(T a, T b) noexcept -> T
 {
     return (a > b) ? a : b;
 }
 
-template <class T> constexpr T sSign(T a)
+template <class T> constexpr auto sSign(T a) noexcept -> T
 {
     return (a == 0) ? static_cast<T>(0) : (a > 0) ? static_cast<T>(1) : static_cast<T>(-1);
 }
 
-template <class T> constexpr T sClamp(T a, T min, T max)
+template <class T> constexpr auto sClamp(T a, T min, T max) -> T
 {
     return std::clamp(a, min, max);
 }
 
-template <class T> constexpr void sSwap(T &a, T &b)
+template <class T> constexpr void sSwap(T &a, T &b) noexcept
 {
     std::swap(a, b);
 }
 
-template <class T> constexpr T sAlign(T a, T b)
+template <class T> constexpr auto sAlign(T a, T b) noexcept -> T
 {
     return (T)((((sDInt)a) + b - 1) & (~(b - 1)));
 }
 
-template <class T> constexpr T sSquare(T a)
+template <class T> constexpr auto sSquare(T a) noexcept -> T
 {
     return a * a;
 }
@@ -93,118 +92,103 @@ constexpr float sPI2F = 2 * sPIF;
 constexpr double sSQRT2 = std::numbers::sqrt2_v<double>;
 constexpr float sSQRT2F = std::numbers::sqrt2_v<float>;
 
-inline sInt sAbs(sInt i)
+inline auto sAbs(sInt i) noexcept -> sInt
 {
     return std::abs(i);
 }
-inline void sSetMem(void *dd, sInt s, sInt c)
+inline void sSetMem(void *dd, sInt s, sInt c) noexcept
 {
     std::memset(dd, s, c);
 }
-inline void sCopyMem(void *dd, const void *ss, sInt c)
+inline void sCopyMem(void *dd, const void *ss, sInt c) noexcept
 {
     std::memcpy(dd, ss, c);
 }
-inline sInt sCmpMem(const void *dd, const void *ss, sInt c)
+inline auto sCmpMem(const void *dd, const void *ss, sInt c) noexcept -> sInt
 {
     return std::memcmp(dd, ss, c);
 }
 
-inline sF64 sFATan(sF64 f)
+inline auto sFATan(sF64 f) noexcept -> sF64
 {
     return std::atan(f);
 }
-inline sF64 sFATan2(sF64 a, sF64 b)
+inline auto sFATan2(sF64 a, sF64 b) noexcept -> sF64
 {
     return std::atan2(a, b);
 }
-inline sF64 sFCos(sF64 f)
+inline auto sFCos(sF64 f) noexcept -> sF64
 {
     return std::cos(f);
 }
-inline sF64 sFAbs(sF64 f)
+inline auto sFAbs(sF64 f) noexcept -> sF64
 {
     return std::fabs(f);
 }
-inline sF64 sFLog(sF64 f)
+inline auto sFLog(sF64 f) noexcept -> sF64
 {
     return std::log(f);
 }
-inline sF64 sFLog10(sF64 f)
+inline auto sFLog10(sF64 f) noexcept -> sF64
 {
     return std::log10(f);
 }
-inline sF64 sFSin(sF64 f)
+inline auto sFSin(sF64 f) noexcept -> sF64
 {
     return std::sin(f);
 }
-inline sF64 sFSqrt(sF64 f)
+inline auto sFSqrt(sF64 f) noexcept -> sF64
 {
     return std::sqrt(f);
 }
-inline sF64 sFTan(sF64 f)
+inline auto sFTan(sF64 f) noexcept -> sF64
 {
     return std::tan(f);
 }
 
-inline sF64 sFACos(sF64 f)
+inline auto sFACos(sF64 f) noexcept -> sF64
 {
     return std::acos(f);
 }
-inline sF64 sFASin(sF64 f)
+inline auto sFASin(sF64 f) noexcept -> sF64
 {
     return std::asin(f);
 }
-inline sF64 sFCosH(sF64 f)
+inline auto sFCosH(sF64 f) noexcept -> sF64
 {
     return std::cosh(f);
 }
-inline sF64 sFSinH(sF64 f)
+inline auto sFSinH(sF64 f) noexcept -> sF64
 {
     return std::sinh(f);
 }
-inline sF64 sFTanH(sF64 f)
+inline auto sFTanH(sF64 f) noexcept -> sF64
 {
     return std::tanh(f);
 }
 
-inline sF64 sFInvSqrt(sF64 f)
+inline auto sFInvSqrt(sF64 f) noexcept -> sF64
 {
     return 1.0 / std::sqrt(f);
 }
 
-inline sF64 sFFloor(sF64 f)
+inline auto sFFloor(sF64 f) noexcept -> sF64
 {
     return std::floor(f);
 }
 
-inline sF64 sFPow(sF64 a, sF64 b)
+inline auto sFPow(sF64 a, sF64 b) noexcept -> sF64
 {
     return std::pow(a, b);
 }
-inline sF64 sFMod(sF64 a, sF64 b)
+inline auto sFMod(sF64 a, sF64 b) noexcept -> sF64
 {
     return std::fmod(a, b);
 }
-inline sF64 sFExp(sF64 f)
+inline auto sFExp(sF64 f) noexcept -> sF64
 {
     return std::exp(f);
 }
-
-/****************************************************************************/
-/***                                                                      ***/
-/***   Debugging                                                          ***/
-/***                                                                      ***/
-/****************************************************************************/
-
-#define sVERIFY(x)                                                                                                                                             \
-    {                                                                                                                                                          \
-        assert(x);                                                                                                                                             \
-    }
-#define sVERIFYFALSE                                                                                                                                           \
-    {                                                                                                                                                          \
-        assert(false);                                                                                                                                         \
-    }
 
 /****************************************************************************/
 
