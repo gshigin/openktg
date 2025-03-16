@@ -65,9 +65,9 @@ class alignas(std::uint64_t) pixel
     // pixel * scalar
     auto operator*=(std::uint16_t) -> pixel &;
     // inverse pixel
-    auto operator~() -> pixel;
+    auto operator~() const -> pixel;
 
-    auto operator==(pixel) -> bool;
+    auto operator==(pixel) const -> bool;
 
     auto lerp(pixel, uint16_t) -> pixel &; // t=0..65536
   private:

@@ -11,6 +11,11 @@ project(openktg
     LANGUAGES CXX
 )
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
+
 add_library(${PROJECT_NAME} 
     src/gentexture.cpp
     src/pixel.cpp
@@ -22,12 +27,17 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 # demo executable
-add_executable(demo demo.cpp)
+add_executable(demo main.cpp)
 target_link_libraries(demo openktg)
 
 option(ENABLE_TESTS "Enable building tests" ON)
 
 if(ENABLE_TESTS)
-    enable_testing()
     add_subdirectory(tests)
+endif()
+
+option(ENABLE_BENCHMARKS "Enable building benchmarks" ON)
+
+if(ENABLE_BENCHMARKS)
+  add_subdirectory(benchmarks)
 endif()

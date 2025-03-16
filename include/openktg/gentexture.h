@@ -8,6 +8,7 @@
 #ifndef __TP_GENTEXTURE_HPP_
 #define __TP_GENTEXTURE_HPP_
 
+#include <openktg/matrix.h>
 #include <openktg/pixel.h>
 #include <openktg/types.h>
 
@@ -28,9 +29,6 @@ struct LinearInput
     sF32 UShift, VShift;   // u/v translate parameter
     sInt FilterMode;       // filtering mode (as in CoordMatrixTransform)
 };
-
-// Simple 4x4 matrix type
-using Matrix44 = sF32[4][4];
 
 // X increases from 0 (left) to 1 (right)
 // Y increases from 0 (bottom) to 1 (top)

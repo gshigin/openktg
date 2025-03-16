@@ -142,7 +142,7 @@ auto pixel::operator*=(std::uint16_t scalar) -> pixel &
     return *this;
 }
 
-auto pixel::operator~() -> pixel
+auto pixel::operator~() const -> pixel
 {
     pixel pnew;
     pnew.r_ = ~r_;
@@ -153,7 +153,7 @@ auto pixel::operator~() -> pixel
     return pnew;
 }
 
-auto pixel::operator==(pixel other) -> bool
+auto pixel::operator==(pixel other) const -> bool
 {
     return std::tie(r_, g_, b_, a_) == std::tie(other.r_, other.g_, other.b_, other.a_);
 }

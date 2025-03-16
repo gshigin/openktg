@@ -1,14 +1,17 @@
-find_package(Catch2 3 CONFIG QUIET)
+find_package(GTest CONFIG QUIET)
 
-if (NOT Catch2_FOUND)
+if (NOT GTest_FOUND)
     include(FetchContent)
     FetchContent_Declare(
-        Catch2
-        GIT_REPOSITORY https://github.com/catchorg/Catch2.git
-        GIT_TAG v3.7.1
+        GTest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG v1.16.0
     )
-    FetchContent_MakeAvailable(Catch2)
+    FetchContent_MakeAvailable(GTest)
 endif()
 
 add_executable(tests test_pixel.cpp test_utils.cpp)
-target_link_libraries(tests Catch2::Catch2WithMain openktg)
+target_link_libraries(tests GTest::gtest_main openktg)
+
+enable_testing()
+add_test(NAME RunTests COMMAND tests)

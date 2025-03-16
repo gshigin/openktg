@@ -14,7 +14,7 @@
 static sU16 Ptable[4096];
 static sU32 *Ptemp;
 
-static sInt P(sInt i)
+static auto P(sInt i) -> sInt
 {
     return Ptable[i & 4095];
 }
