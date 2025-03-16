@@ -11,6 +11,7 @@
 #include <chrono>
 #include <cstdio>
 #include <ratio>
+#include <string>
 
 // Create a simple linear gradient texture
 // Input colors are 0xaarrggbb (not premultiplied!)
@@ -155,7 +156,7 @@ static auto SaveImage(GenTexture &img, const char *filename) -> bool
     return true;
 }
 
-int main(int argc, char **argv)
+int main()
 {
     // initialize generator
     InitTexgen();
@@ -177,12 +178,11 @@ int main(int argc, char **argv)
     noise.Init(256, 256);
     noise.Noise(gradBW, 2, 2, 6, 0.5f, 123, GenTexture::NoiseDirect | GenTexture::NoiseBandlimit | GenTexture::NoiseNormalize);
 
-    /*// save test image
-    if(!SaveImage(noise,"noise.tga"))
+    if (!SaveImage(noise, "noise.tga"))
     {
-      printf("Couldn't write 'noise.tga'!\n");
-      return 1;
-    }*/
+        printf("Couldn't write 'noise.tga'!\n");
+        return 1;
+    }
 
     // 4 "random voronoi" textures with different minimum distances
     GenTexture voro[4];
@@ -194,6 +194,14 @@ int main(int argc, char **argv)
     {
         voro[i].Init(256, 256);
         RandomVoronoi(voro[i], gradWhite, voroIntens[i], voroCount[i], voroDist[i]);
+
+        std::string name = "voron" + std::to_string(i) + ".tga";
+
+        if (!SaveImage(voro[i], name.data()))
+        {
+            printf("Couldn't write 'voro.tga'!\n");
+            return 1;
+        }
     }
 
     // linear combination of them
@@ -209,10 +217,22 @@ int main(int argc, char **argv)
 
     GenTexture baseTex;
     baseTex.Init(256, 256);
-    baseTex.LinearCombine(black, 0.0f, inputs, 4);
+    baseTex.LinearCombine(white, 1.0f, inputs, 4);
+
+    if (!SaveImage(baseTex, "base_linear_combine.tga"))
+    {
+        printf("Couldn't write 'base_linear_combine.tga'!\n");
+        return 1;
+    }
 
     // blur it
     baseTex.Blur(baseTex, 0.0074f, 0.0074f, 1, GenTexture::WrapU | GenTexture::WrapV);
+
+    if (!SaveImage(baseTex, "base_linear_combine_blur.tga"))
+    {
+        printf("Couldn't write 'base_linear_combine_blur.tga'!\n");
+        return 1;
+    }
 
     // add a noise layer
     GenTexture noiseLayer;
@@ -220,10 +240,28 @@ int main(int argc, char **argv)
     noiseLayer.Noise(LinearGradient(0xff000000, 0xff646464), 4, 4, 5, 0.995f, 3,
                      GenTexture::NoiseDirect | GenTexture::NoiseNormalize | GenTexture::NoiseBandlimit);
 
+    if (!SaveImage(noiseLayer, "noise_layer.tga"))
+    {
+        printf("Couldn't write 'noise_layer.tga'!\n");
+        return 1;
+    }
+
     baseTex.Paste(baseTex, noiseLayer, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, GenTexture::CombineAdd, 0);
+
+    if (!SaveImage(baseTex, "base_plus_noise.tga"))
+    {
+        printf("Couldn't write 'base_plus_noise.tga'!\n");
+        return 1;
+    }
 
     // colorize it
     Colorize(baseTex, 0xff747d8e, 0xfff1feff);
+
+    if (!SaveImage(baseTex, "colorized.tga"))
+    {
+        printf("Couldn't write 'colorized.tga'!\n");
+        return 1;
+    }
 
     // Create transform matrix for grid pattern
     Matrix44 m1, m2, m3;
@@ -248,6 +286,24 @@ int main(int argc, char **argv)
     rect1n.Init(256, 256);
     rect1n.Derive(rect1x, GenTexture::DeriveNormals, 2.5f);
 
+    if (!SaveImage(rect1, "rect1.tga"))
+    {
+        printf("Couldn't write 'rect1.tga'!\n");
+        return 1;
+    }
+
+    if (!SaveImage(rect1x, "rect1x.tga"))
+    {
+        printf("Couldn't write 'rect1x.tga'!\n");
+        return 1;
+    }
+
+    if (!SaveImage(rect1n, "rect1n.tga"))
+    {
+        printf("Couldn't write 'rect1n.tga'!\n");
+        return 1;
+    }
+
     // Apply as bump map
     GenTexture finalTex;
     Pixel amb, diff;
@@ -256,6 +312,12 @@ int main(int argc, char **argv)
     amb.Init(0xff101010);
     diff.Init(0xffffffff);
     finalTex.Bump(baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, sTRUE);
+
+    if (!SaveImage(finalTex, "final.tga"))
+    {
+        printf("Couldn't write 'final.tga'!\n");
+        return 1;
+    }
 
     // Second grid pattern GlowRect
     GenTexture rect2, rect2x;
@@ -266,17 +328,32 @@ int main(int argc, char **argv)
     rect2x.Init(256, 256);
     rect2x.CoordMatrixTransform(rect2, m3, GenTexture::WrapU | GenTexture::WrapV | GenTexture::FilterBilinear);
 
+    if (!SaveImage(rect2, "rect2.tga"))
+    {
+        printf("Couldn't write 'rect2.tga'!\n");
+        return 1;
+    }
+
+    if (!SaveImage(rect2x, "rect2x.tga"))
+    {
+        printf("Couldn't write 'rect2x.tga'!\n");
+        return 1;
+    }
+
     // Multiply it over
     finalTex.Paste(finalTex, rect2x, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, GenTexture::CombineMultiply, 0);
+
+    if (!SaveImage(finalTex, "finalfinal.tga"))
+    {
+        printf("Couldn't write 'finalfinal.tga'!\n");
+        return 1;
+    }
 
     auto endTime = std::chrono::high_resolution_clock::now();
 
     using milliseconds = std::chrono::duration<double, std::milli>;
 
     printf("%f ms/tex\n", std::chrono::duration_cast<milliseconds>(endTime - startTime).count());
-
-    /*SaveImage(baseTex,"baseTex.tga");
-    SaveImage(finalTex,"final.tga");*/
 
     return 0;
 }
