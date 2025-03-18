@@ -72,8 +72,8 @@ TEST(UtilsTest, MulIntensRange)
                 auto a = static_cast<std::uint16_t>(j * 1024 - 11);
                 auto b = static_cast<std::uint16_t>(k * 1024 + 7);
 
-                EXPECT_EQ(static_cast<std::uint16_t>(legacy::MulIntens(a, b)), utility::mult_intens(a, b));
-                EXPECT_EQ(utility::mult_intens(a, b), utility::mult_intens(b, a));
+                EXPECT_EQ(static_cast<std::uint16_t>(legacy::MulIntens(a, b)), utility::mul_intens(a, b));
+                EXPECT_EQ(utility::mul_intens(a, b), utility::mul_intens(b, a));
             }
         }
     }
@@ -85,7 +85,7 @@ TEST(UtilsTest, MulIntensRandom)
     {
         std::uint16_t a = random_uint16(0, 65535);
         std::uint16_t b = random_uint16(0, 65535);
-        EXPECT_EQ(static_cast<std::uint16_t>(legacy::MulIntens(a, b)), utility::mult_intens(a, b));
-        EXPECT_EQ(utility::mult_intens(a, b), utility::mult_intens(b, a));
+        EXPECT_EQ(static_cast<std::uint16_t>(legacy::MulIntens(a, b)), utility::mul_intens(a, b));
+        EXPECT_EQ(utility::mul_intens(a, b), utility::mul_intens(b, a));
     }
 }

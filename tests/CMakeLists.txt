@@ -10,7 +10,7 @@ if (NOT GTest_FOUND)
     FetchContent_MakeAvailable(GTest)
 endif()
 
-add_executable(tests test_pixel.cpp test_utils.cpp)
+add_executable(tests test_pixel.cpp test_utils.cpp test_end_to_end.cpp)
 target_link_libraries(tests GTest::gtest_main openktg)
 
 enable_testing()

@@ -27,7 +27,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 )
 
 # demo executable
-add_executable(demo main.cpp)
+add_executable(demo demo.cpp)
 target_link_libraries(demo openktg)
 
 option(ENABLE_TESTS "Enable building tests" ON)

@@ -97,9 +97,9 @@ pixel::pixel(std::uint32_t rgba)
     av = (rgba >> 24) & 0xff;
 
     a_ = (av << 8) | av;
-    r_ = utility::mult_intens((rv << 8) | rv, a_);
-    g_ = utility::mult_intens((gv << 8) | gv, a_);
-    b_ = utility::mult_intens((bv << 8) | bv, a_);
+    r_ = utility::mul_intens((rv << 8) | rv, a_);
+    g_ = utility::mul_intens((gv << 8) | gv, a_);
+    b_ = utility::mul_intens((bv << 8) | bv, a_);
 }
 
 auto pixel::operator+=(pixel other) -> pixel &
@@ -124,10 +124,10 @@ auto pixel::operator-=(pixel other) -> pixel &
 
 auto pixel::operator*=(pixel other) -> pixel &
 {
-    r_ = utility::mult_intens(r_, other.r_);
-    g_ = utility::mult_intens(g_, other.g_);
-    b_ = utility::mult_intens(b_, other.b_);
-    a_ = utility::mult_intens(a_, other.a_);
+    r_ = utility::mul_intens(r_, other.r_);
+    g_ = utility::mul_intens(g_, other.g_);
+    b_ = utility::mul_intens(b_, other.b_);
+    a_ = utility::mul_intens(a_, other.a_);
 
     return *this;
 }

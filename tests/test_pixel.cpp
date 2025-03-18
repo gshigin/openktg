@@ -54,10 +54,10 @@ TEST(PixelTest, RandomOperations)
         pixel pp(rr, gg, bb, aa);
         EXPECT_EQ(p * pp, pp * p);
         pixel pxpp = p * pp;
-        EXPECT_EQ(pxpp.r(), ut::mult_intens((r << 8) | r, (rr << 8) | rr));
-        EXPECT_EQ(pxpp.g(), ut::mult_intens((g << 8) | g, (gg << 8) | gg));
-        EXPECT_EQ(pxpp.b(), ut::mult_intens((b << 8) | b, (bb << 8) | bb));
-        EXPECT_EQ(pxpp.a(), ut::mult_intens((a << 8) | a, (aa << 8) | aa));
+        EXPECT_EQ(pxpp.r(), ut::mul_intens((r << 8) | r, (rr << 8) | rr));
+        EXPECT_EQ(pxpp.g(), ut::mul_intens((g << 8) | g, (gg << 8) | gg));
+        EXPECT_EQ(pxpp.b(), ut::mul_intens((b << 8) | b, (bb << 8) | bb));
+        EXPECT_EQ(pxpp.a(), ut::mul_intens((a << 8) | a, (aa << 8) | aa));
 
         // pixel - itself == 0
         pixel p0(0, 0, 0, 0);
