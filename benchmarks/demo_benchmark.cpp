@@ -1,13 +1,10 @@
 #include <benchmark/benchmark.h>
 
-#include <ranges>
-
 #include <openktg/gentexture.h>
 #include <openktg/procedural.h>
 
 static void BM_Demo(benchmark::State &state)
 {
-
     // initialize generator
     InitTexgen();
 

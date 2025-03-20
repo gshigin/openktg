@@ -44,6 +44,8 @@ if(ENABLE_TRACY)
     else()  
         message(STATUS "Tracy found") 
     endif()
+    
+    add_definitions(-DTRACY_ENABLE)
 
     target_link_libraries(openktg TracyClient)
 endif()
