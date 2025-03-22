@@ -5,16 +5,15 @@
 
 static void BM_Demo(benchmark::State &state)
 {
-    // initialize generator
-    InitTexgen();
-
-    // colors
-    Pixel black, white;
-    black.Init(0, 0, 0, 255);
-    white.Init(255, 255, 255, 255);
-
     for (auto _ : state)
     {
+        // initialize generator
+        InitTexgen();
+
+        // colors
+        Pixel black, white;
+        black.Init(0, 0, 0, 255);
+        white.Init(255, 255, 255, 255);
         // create gradients
         GenTexture gradBW = LinearGradient(0xff000000, 0xffffffff);
         GenTexture gradWB = LinearGradient(0xffffffff, 0xff000000);
