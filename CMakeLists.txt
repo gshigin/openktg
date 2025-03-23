@@ -11,6 +11,11 @@ project(openktg
     LANGUAGES CXX
 )
 
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
+    add_link_options(-fsanitize=address)
+endif()
+
 add_library(${PROJECT_NAME} 
     src/gentexture.cpp
     src/pixel.cpp
@@ -21,13 +26,44 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 
-# demo executable
-add_executable(demo demo.cpp)
-target_link_libraries(demo openktg)
+option(ENABLE_TRACY "Enable Tracy Profiler" OFF) 
 
-option(ENABLE_TESTS "Enable building tests" ON)
+if(ENABLE_TRACY)
+  message(STATUS "Tracy Profiler enabled")
+    find_package(TracyClient CONFIG QUIET)
+
+    if (NOT TracyClient_FOUND)
+      message(STATUS "Tracy not found: Fetching Tracy")
+      include(FetchContent)
+      FetchContent_Declare(
+          tracy
+          GIT_REPOSITORY https://github.com/wolfpld/tracy.git
+          GIT_TAG v0.11.1
+      )
+      FetchContent_MakeAvailable(tracy)
+    else()  
+        message(STATUS "Tracy found") 
+    endif()
+    
+    add_definitions(-DTRACY_ENABLE)
+
+    target_link_libraries(openktg TracyClient)
+endif()
+
+option(ENABLE_TESTS "Enable tests" ON)
 
 if(ENABLE_TESTS)
-    enable_testing()
+    message(STATUS "Tests enabled")
     add_subdirectory(tests)
 endif()
+
+option(ENABLE_BENCHMARKS "Enable benchmarks" ON)
+
+if(ENABLE_BENCHMARKS)
+message(STATUS "Benchmarks enabled")
+  add_subdirectory(benchmarks)
+endif()
+
+# demo executable
+add_executable(demo demo.cpp)
+target_link_libraries(demo openktg) 
