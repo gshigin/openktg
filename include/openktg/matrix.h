@@ -1,5 +1,6 @@
 #pragma once
 
+#include <openktg/pixel.h>
 #include <openktg/types.h>
 
 // Simple 4x4 matrix type
