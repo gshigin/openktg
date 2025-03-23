@@ -33,8 +33,8 @@ static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensi
 
         centers[i].x = 1.0f * rand() / RAND_MAX;
         centers[i].y = 1.0f * rand() / RAND_MAX;
-        centers[i].color = {static_cast<openktg::red16_t>(intens), static_cast<openktg::green16_t>(intens), static_cast<openktg::blue16_t>(intens),
-                            static_cast<openktg::alpha16_t>(255)};
+        centers[i].color = {static_cast<openktg::red8_t>(intens), static_cast<openktg::green8_t>(intens), static_cast<openktg::blue8_t>(intens),
+                            static_cast<openktg::alpha8_t>(255)};
     }
 
     // remove points too close together
