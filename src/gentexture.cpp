@@ -898,9 +898,8 @@ void GenTexture::Derive(const GenTexture &in, DeriveOp op, sF32 strength)
                                       static_cast<openktg::blue16_t>(sClamp<sInt>(scale + 32768.0f, 0, 65535)), static_cast<openktg::alpha16_t>(65535)};
                 break;
             }
-
-                out++;
             }
+            out++;
         }
     }
 }
@@ -1359,7 +1358,10 @@ void GenTexture::Bump(const GenTexture &surface, const GenTexture &normals, cons
 
             // lighting calculation
             sF32 NdotL = sMax<sF32>(N[0] * L[0] + N[1] * L[1] + N[2] * L[2], 0.0f);
-            openktg::pixel ambDiffuse = diffuse * NdotL;
+            // openktg::pixel ambDiffuse = diffuse * NdotL;
+            openktg::pixel ambDiffuse =
+                openktg::pixel{static_cast<openktg::red16_t>(NdotL * diffuse.r()), static_cast<openktg::green16_t>(NdotL * diffuse.g()),
+                               static_cast<openktg::blue16_t>(NdotL * diffuse.b()), static_cast<openktg::alpha16_t>(NdotL * diffuse.a())};
             // ambDiffuse.r = NdotL * diffuse.r;
             // ambDiffuse.g = NdotL * diffuse.g;
             // ambDiffuse.b = NdotL * diffuse.b;
