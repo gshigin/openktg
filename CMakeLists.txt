@@ -26,7 +26,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
   $<INSTALL_INTERFACE:include>
 )
 
-option(ENABLE_TRACY "Enable Tracy Profiler" ON)
+option(ENABLE_TRACY "Enable Tracy Profiler" OFF) 
 
 if(ENABLE_TRACY)
   message(STATUS "Tracy Profiler enabled")
