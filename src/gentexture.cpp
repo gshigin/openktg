@@ -1228,7 +1228,7 @@ void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 or
 
                     const auto new_alpha = out->a() + openktg::utility::mul_intens(in.a(), transOut);
 
-                    *out = (*out * transIn) + (in * transIn) + (*out * in);
+                    *out = (*out * transIn) + (in * transOut) + (*out * in);
                     out->set_alpha(static_cast<openktg::alpha16_t>(new_alpha));
 
                     // out->r = MulIntens(transIn, out->r) + MulIntens(transOut, in.r) + MulIntens(in.r, out->r);
