@@ -1,5 +1,3 @@
-#include <algorithm>
-#include <tuple>
 #include <utility>
 
 #include <openktg/pixel.h>
@@ -85,19 +83,20 @@ auto pixel::operator*=(std::uint16_t scalar) -> pixel &
 
 auto pixel::operator|=(pixel other) -> pixel &
 {
-    r_ = std::max(r_, other.r_);
-    g_ = std::max(g_, other.g_);
-    b_ = std::max(b_, other.b_);
-    a_ = std::max(a_, other.a_);
+    r_ = r_ > other.r_ ? r_ : other.r_;
+    g_ = g_ > other.g_ ? g_ : other.g_;
+    b_ = b_ > other.b_ ? b_ : other.b_;
+    a_ = a_ > other.a_ ? a_ : other.a_;
 
     return *this;
 }
+
 auto pixel::operator&=(pixel other) -> pixel &
 {
-    r_ = std::min(r_, other.r_);
-    g_ = std::min(g_, other.g_);
-    b_ = std::min(b_, other.b_);
-    a_ = std::min(a_, other.a_);
+    r_ = r_ < other.r_ ? r_ : other.r_;
+    g_ = g_ < other.g_ ? g_ : other.g_;
+    b_ = b_ < other.b_ ? b_ : other.b_;
+    a_ = a_ < other.a_ ? a_ : other.a_;
 
     return *this;
 }
@@ -109,7 +108,7 @@ auto pixel::operator~() const -> pixel
 
 auto pixel::operator==(pixel other) const -> bool
 {
-    return std::tie(r_, g_, b_, a_) == std::tie(other.r_, other.g_, other.b_, other.a_);
+    return (r_ == other.r_) && (g_ == other.g_) && (b_ == other.b_) && (a_ == other.a_);
 }
 
 auto pixel::lerp(pixel other, std::uint32_t t) -> pixel &
