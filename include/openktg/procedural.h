@@ -3,6 +3,7 @@
 #include <cassert>
 
 #include <openktg/gentexture.h>
+#include <openktg/pixel.h>
 #include <openktg/types.h>
 
 // Create a simple linear gradient texture
@@ -12,8 +13,8 @@ static auto LinearGradient(sU32 startCol, sU32 endCol) -> GenTexture
     GenTexture tex;
 
     tex.Init(2, 1);
-    tex.Data[0].Init(startCol);
-    tex.Data[1].Init(endCol);
+    tex.Data[0] = openktg::pixel{static_cast<openktg::color32_t>(startCol)};
+    tex.Data[1] = openktg::pixel{static_cast<openktg::color32_t>(endCol)};
 
     return tex;
 }
@@ -32,7 +33,8 @@ static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensi
 
         centers[i].x = 1.0f * rand() / RAND_MAX;
         centers[i].y = 1.0f * rand() / RAND_MAX;
-        centers[i].color.Init(intens, intens, intens, 255);
+        centers[i].color = {static_cast<openktg::red8_t>(intens), static_cast<openktg::green8_t>(intens), static_cast<openktg::blue8_t>(intens),
+                            static_cast<openktg::alpha8_t>(255)};
     }
 
     // remove points too close together
@@ -75,20 +77,21 @@ static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensi
 static void Colorize(GenTexture &img, sU32 startCol, sU32 endCol)
 {
     Matrix44 m;
-    Pixel s, e;
+    openktg::pixel s{static_cast<openktg::color32_t>(startCol)};
+    openktg::pixel e{static_cast<openktg::color32_t>(endCol)};
 
-    s.Init(startCol);
-    e.Init(endCol);
+    // s.Init(startCol);
+    // e.Init(endCol);
 
     // calculate matrix
     sSetMem(m, 0, sizeof(m));
-    m[0][0] = (e.r - s.r) / 65535.0f;
-    m[1][1] = (e.g - s.g) / 65535.0f;
-    m[2][2] = (e.b - s.b) / 65535.0f;
+    m[0][0] = (e.r() - s.r()) / 65535.0f;
+    m[1][1] = (e.g() - s.g()) / 65535.0f;
+    m[2][2] = (e.b() - s.b()) / 65535.0f;
     m[3][3] = 1.0f;
-    m[0][3] = s.r / 65535.0f;
-    m[1][3] = s.g / 65535.0f;
-    m[2][3] = s.b / 65535.0f;
+    m[0][3] = s.r() / 65535.0f;
+    m[1][3] = s.g() / 65535.0f;
+    m[2][3] = s.b() / 65535.0f;
 
     // transform
     img.ColorMatrixTransform(img, m, sTRUE);
