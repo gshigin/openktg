@@ -1,6 +1,3 @@
-#include <openktg/pixel.h>
-#include <openktg/types.h>
-
 #include <gtest/gtest.h>
 
 #include <cstdint>
@@ -8,7 +5,9 @@
 #include <fstream>
 
 #include <openktg/gentexture.h>
+#include <openktg/pixel.h>
 #include <openktg/procedural.h>
+#include <openktg/types.h>
 
 auto ReadImage(GenTexture &img, const char *filename) -> bool
 {
@@ -44,14 +43,10 @@ auto ReadImage(GenTexture &img, const char *filename) -> bool
         openktg::pixel *out = &img.Data[y * img.XRes];
         for (int x = 0; x < img.XRes; ++x)
         {
-            *out = openktg::pixel{static_cast<openktg::red16_t>((lineBuf[x * 4 + 0] << 8) | lineBuf[x * 4 + 0]),
+            *out = openktg::pixel{static_cast<openktg::red16_t>((lineBuf[x * 4 + 2] << 8) | lineBuf[x * 4 + 0]),
                                   static_cast<openktg::green16_t>((lineBuf[x * 4 + 1] << 8) | lineBuf[x * 4 + 1]),
-                                  static_cast<openktg::blue16_t>((lineBuf[x * 4 + 2] << 8) | lineBuf[x * 4 + 2]),
+                                  static_cast<openktg::blue16_t>((lineBuf[x * 4 + 0] << 8) | lineBuf[x * 4 + 2]),
                                   static_cast<openktg::alpha16_t>((lineBuf[x * 4 + 3] << 8) | lineBuf[x * 4 + 3])};
-            // out->b = (lineBuf[x * 4 + 0] << 8) | lineBuf[x * 4 + 0];
-            // out->g = (lineBuf[x * 4 + 1] << 8) | lineBuf[x * 4 + 1];
-            // out->r = (lineBuf[x * 4 + 2] << 8) | lineBuf[x * 4 + 2];
-            // out->a = (lineBuf[x * 4 + 3] << 8) | lineBuf[x * 4 + 3];
             ++out;
         }
     }
@@ -68,9 +63,6 @@ auto GenerateTexture() -> GenTexture
     // colors
     openktg::pixel black{0xFF000000_argb};
     openktg::pixel white{0xFFFFFFFF_argb};
-    // Pixel black, white;
-    // black.Init(0, 0, 0, 255);
-    // white.Init(255, 255, 255, 255);
 
     auto startTime = std::chrono::high_resolution_clock::now();
 
@@ -154,8 +146,6 @@ auto GenerateTexture() -> GenTexture
     openktg::pixel diff{0xffffffff_argb};
 
     finalTex.Init(256, 256);
-    // amb.Init(0xff101010);
-    // diff.Init(0xffffffff);
     finalTex.Bump(baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, sTRUE);
 
     // Second grid pattern GlowRect

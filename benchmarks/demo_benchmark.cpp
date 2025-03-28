@@ -1,19 +1,22 @@
 #include <benchmark/benchmark.h>
 
 #include <openktg/gentexture.h>
+#include <openktg/pixel.h>
 #include <openktg/procedural.h>
+#include <openktg/types.h>
 
 static void BM_Demo(benchmark::State &state)
 {
+    using namespace openktg;
     for (auto _ : state)
     {
         // initialize generator
         InitTexgen();
 
         // colors
-        Pixel black, white;
-        black.Init(0, 0, 0, 255);
-        white.Init(255, 255, 255, 255);
+        openktg::pixel black{0xFF000000_argb};
+        openktg::pixel white{0xFFFFFFFF_argb};
+
         // create gradients
         GenTexture gradBW = LinearGradient(0xff000000, 0xffffffff);
         GenTexture gradWB = LinearGradient(0xffffffff, 0xff000000);
@@ -90,11 +93,10 @@ static void BM_Demo(benchmark::State &state)
 
         // Apply as bump map
         GenTexture finalTex;
-        Pixel amb, diff;
+        openktg::pixel amb{0xff101010_argb};
+        openktg::pixel diff{0xffffffff_argb};
 
         finalTex.Init(256, 256);
-        amb.Init(0xff101010);
-        diff.Init(0xffffffff);
         finalTex.Bump(baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, sTRUE);
 
         // Second grid pattern GlowRect
