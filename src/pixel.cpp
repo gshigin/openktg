@@ -9,8 +9,8 @@
 namespace openktg
 {
 pixel::pixel(red8_t r, green8_t g, blue8_t b, alpha8_t a)
-    : r_((static_cast<uint16_t>(r) << 8) | static_cast<uint16_t>(r)), g_((static_cast<uint16_t>(g) << 8) | static_cast<uint16_t>(g)),
-      b_((static_cast<uint16_t>(b) << 8) | static_cast<uint16_t>(b)), a_((static_cast<uint16_t>(a) << 8) | static_cast<uint16_t>(a))
+    : r_(utility::expand8to16(std::to_underlying(r))), g_(utility::expand8to16(std::to_underlying(g))), b_(utility::expand8to16(std::to_underlying(b))),
+      a_(utility::expand8to16(std::to_underlying(a)))
 {
 }
 
@@ -21,43 +21,44 @@ pixel::pixel(red16_t r, green16_t g, blue16_t b, alpha16_t a)
 
 pixel::pixel(color32_t argb)
 {
-    std::uint16_t rv, gv, bv, av;
+    const std::uint32_t val = std::to_underlying(argb);
 
-    rv = (std::to_underlying(argb) >> 16) & 0xff;
-    gv = (std::to_underlying(argb) >> 8) & 0xff;
-    bv = (std::to_underlying(argb) >> 0) & 0xff;
-    av = (std::to_underlying(argb) >> 24) & 0xff;
+    const std::uint8_t rv = (val >> 16) & 0xFF;
+    const std::uint8_t gv = (val >> 8) & 0xFF;
+    const std::uint8_t bv = (val >> 0) & 0xFF;
+    const std::uint8_t av = (val >> 24) & 0xFF;
 
-    a_ = (av << 8) | av;
-    r_ = utility::mul_intens((rv << 8) | rv, a_);
-    g_ = utility::mul_intens((gv << 8) | gv, a_);
-    b_ = utility::mul_intens((bv << 8) | bv, a_);
+    a_ = utility::expand8to16(av);
+    r_ = utility::mul_intens(utility::expand8to16(rv), a_);
+    g_ = utility::mul_intens(utility::expand8to16(gv), a_);
+    b_ = utility::mul_intens(utility::expand8to16(bv), a_);
 }
 
 pixel::pixel(color64_t argb64)
 {
-    r_ = (std::to_underlying(argb64) >> 32) & 0xffff;
-    g_ = (std::to_underlying(argb64) >> 16) & 0xffff;
-    b_ = (std::to_underlying(argb64) >> 0) & 0xffff;
-    a_ = (std::to_underlying(argb64) >> 48) & 0xffff;
+    const std::uint64_t val = std::to_underlying(argb64);
+    r_ = (val >> 32) & 0xFFFF;
+    g_ = (val >> 16) & 0xFFFF;
+    b_ = (val >> 0) & 0xFFFF;
+    a_ = (val >> 48) & 0xFFFF;
 }
 
 auto pixel::operator+=(pixel other) -> pixel &
 {
-    r_ = std::min<std::uint32_t>(static_cast<std::uint32_t>(r_) + static_cast<std::uint32_t>(other.r_), 65535);
-    g_ = std::min<std::uint32_t>(static_cast<std::uint32_t>(g_) + static_cast<std::uint32_t>(other.g_), 65535);
-    b_ = std::min<std::uint32_t>(static_cast<std::uint32_t>(b_) + static_cast<std::uint32_t>(other.b_), 65535);
-    a_ = std::min<std::uint32_t>(static_cast<std::uint32_t>(a_) + static_cast<std::uint32_t>(other.a_), 65535);
+    r_ = (r_ > 0xFFFF - other.r_) ? 0xFFFF : r_ + other.r_;
+    g_ = (g_ > 0xFFFF - other.g_) ? 0xFFFF : g_ + other.g_;
+    b_ = (b_ > 0xFFFF - other.b_) ? 0xFFFF : b_ + other.b_;
+    a_ = (a_ > 0xFFFF - other.a_) ? 0xFFFF : a_ + other.a_;
 
     return *this;
 }
 
 auto pixel::operator-=(pixel other) -> pixel &
 {
-    r_ = std::clamp<std::int32_t>(static_cast<std::int32_t>(r_) - static_cast<std::int32_t>(other.r_), 0, 65535);
-    g_ = std::clamp<std::int32_t>(static_cast<std::int32_t>(g_) - static_cast<std::int32_t>(other.g_), 0, 65535);
-    b_ = std::clamp<std::int32_t>(static_cast<std::int32_t>(b_) - static_cast<std::int32_t>(other.b_), 0, 65535);
-    a_ = std::clamp<std::int32_t>(static_cast<std::int32_t>(a_) - static_cast<std::int32_t>(other.a_), 0, 65535);
+    r_ = (r_ > other.r_) ? (r_ - other.r_) : 0;
+    g_ = (g_ > other.g_) ? (g_ - other.g_) : 0;
+    b_ = (b_ > other.b_) ? (b_ - other.b_) : 0;
+    a_ = (a_ > other.a_) ? (a_ - other.a_) : 0;
 
     return *this;
 }
@@ -103,13 +104,7 @@ auto pixel::operator&=(pixel other) -> pixel &
 
 auto pixel::operator~() const -> pixel
 {
-    pixel pnew;
-    pnew.r_ = ~r_;
-    pnew.g_ = ~g_;
-    pnew.b_ = ~b_;
-    pnew.a_ = ~a_;
-
-    return pnew;
+    return pixel{static_cast<red16_t>(~r_), static_cast<green16_t>(~g_), static_cast<blue16_t>(~b_), static_cast<alpha16_t>(~a_)};
 }
 
 auto pixel::operator==(pixel other) const -> bool
@@ -117,7 +112,7 @@ auto pixel::operator==(pixel other) const -> bool
     return std::tie(r_, g_, b_, a_) == std::tie(other.r_, other.g_, other.b_, other.a_);
 }
 
-auto pixel::lerp(pixel other, uint16_t t) -> pixel &
+auto pixel::lerp(pixel other, std::uint32_t t) -> pixel &
 {
     r_ = utility::lerp(r_, other.r_, t);
     g_ = utility::lerp(g_, other.g_, t);
@@ -183,7 +178,7 @@ auto operator&(pixel lhs, pixel rhs) -> pixel
     return lhs &= rhs;
 }
 
-auto lerp(pixel lhs, pixel rhs, uint16_t t) -> pixel // t=0..65536 [0..1]
+auto lerp(pixel lhs, pixel rhs, uint32_t t) -> pixel // t=0..65536 [0..1]
 {
     return lhs.lerp(rhs, t);
 }
@@ -204,103 +199,34 @@ auto compositeMulC(pixel lhs, pixel rhs) -> pixel
 }
 auto compositeROver(pixel lhs, pixel rhs) -> pixel
 {
-    const std::uint16_t inverse_alpha = ~rhs.a();
-    return lhs * inverse_alpha + rhs;
+    return ~rhs.a() * lhs + rhs;
 }
 auto compositeScreen(pixel lhs, pixel rhs) -> pixel
 {
     return lhs += rhs * (~lhs);
 }
-} // namespace openktg
 
-/*
-switch(op)
+// combine
+auto combineOver(pixel lhs, pixel rhs) -> pixel
 {
-case CombineAdd:
-    out->r = sMin(out->r + in.r,65535);
-    out->g = sMin(out->g + in.g,65535);
-    out->b = sMin(out->b + in.b,65535);
-    out->a = sMin(out->a + in.a,65535);
-    break;
-
-case CombineSub:
-    out->r = sMax<sInt>(out->r - in.r,0);
-    out->g = sMax<sInt>(out->g - in.g,0);
-    out->b = sMax<sInt>(out->b - in.b,0);
-    out->a = sMax<sInt>(out->a - in.a,0);
-    break;
-
-case CombineMulC:
-    out->r = MulIntens(out->r,in.r);
-    out->g = MulIntens(out->g,in.g);
-    out->b = MulIntens(out->b,in.b);
-    out->a = MulIntens(out->a,in.a);
-    break;
-
-case CombineMin:
-    out->r = sMin(out->r,in.r);
-    out->g = sMin(out->g,in.g);
-    out->b = sMin(out->b,in.b);
-    out->a = sMin(out->a,in.a);
-    break;
-
-case CombineMax:
-    out->r = sMax(out->r,in.r);
-    out->g = sMax(out->g,in.g);
-    out->b = sMax(out->b,in.b);
-    out->a = sMax(out->a,in.a);
-    break;
-
-case CombineSetAlpha:
-    out->a = in.r;
-    break;
-
-case CombinePreAlpha:
-    out->r = MulIntens(out->r,in.r);
-    out->g = MulIntens(out->g,in.r);
-    out->b = MulIntens(out->b,in.r);
-    out->a = in.g;
-    break;
-
-case CombineOver:
-    transIn = 65535 - in.a;
-
-    out->r = MulIntens(transIn,out->r) + in.r;
-    out->g = MulIntens(transIn,out->g) + in.g;
-    out->b = MulIntens(transIn,out->b) + in.b;
-    out->a += MulIntens(in.a,65535-out->a);
-    break;
-
-case CombineMultiply:
-    transIn = 65535 - in.a;
-    transOut = 65535 - out->a;
-
-    out->r = MulIntens(transIn,out->r) + MulIntens(transOut,in.r) + MulIntens(in.r,out->r);
-    out->g = MulIntens(transIn,out->g) + MulIntens(transOut,in.g) + MulIntens(in.g,out->g);
-    out->b = MulIntens(transIn,out->b) + MulIntens(transOut,in.b) + MulIntens(in.b,out->b);
-    out->a += MulIntens(in.a,transOut);
-    break;
-
-case CombineScreen:
-    out->r += MulIntens(in.r,65535-out->r);
-    out->g += MulIntens(in.g,65535-out->g);
-    out->b += MulIntens(in.b,65535-out->b);
-    out->a += MulIntens(in.a,65535-out->a);
-    break;
-
-case CombineDarken:
-    out->r += in.r - sMax(MulIntens(in.r,out->a),MulIntens(out->r,in.a));
-    out->g += in.g - sMax(MulIntens(in.g,out->a),MulIntens(out->g,in.a));
-    out->b += in.b - sMax(MulIntens(in.b,out->a),MulIntens(out->b,in.a));
-    out->a += MulIntens(in.a,65535-out->a);
-    break;
-
-case CombineLighten:
-    out->r += in.r - sMin(MulIntens(in.r,out->a),MulIntens(out->r,in.a));
-    out->g += in.g - sMin(MulIntens(in.g,out->a),MulIntens(out->g,in.a));
-    out->b += in.b - sMin(MulIntens(in.b,out->a),MulIntens(out->b,in.a));
-    out->a += MulIntens(in.a,65535-out->a);
-    break;
+    return lhs + rhs * (~lhs.a());
 }
+auto combineMultiply(pixel lhs, pixel rhs) -> pixel
+{
+    return ((lhs * rhs) + (~lhs.a() * rhs) + (~rhs.a() * lhs)).set_alpha(static_cast<alpha16_t>(lhs.a() + rhs.a() - utility::mul_intens(lhs.a(), rhs.a())));
 }
-*/
+auto combineScreen(pixel lhs, pixel rhs) -> pixel
+{
+    return rhs + lhs * (~rhs);
+}
+auto combineDarken(pixel lhs, pixel rhs) -> pixel
+{
+    return ((lhs | rhs) - ((lhs * rhs.a()) | (lhs.a() * rhs)) + (lhs & rhs))
+        .set_alpha(static_cast<alpha16_t>(rhs.a() + utility::mul_intens(lhs.a(), ~rhs.a())));
+}
+auto combineLighten(pixel lhs, pixel rhs) -> pixel
+{
+    return ((lhs & rhs) - ((lhs * rhs.a()) & (lhs.a() * rhs)) + (lhs | rhs))
+        .set_alpha(static_cast<alpha16_t>(rhs.a() + utility::mul_intens(lhs.a(), ~rhs.a())));
+}
+} // namespace openktg

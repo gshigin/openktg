@@ -157,7 +157,7 @@ class alignas(std::uint64_t) pixel
 
     auto operator==(pixel) const -> bool;
 
-    auto lerp(pixel, uint16_t) -> pixel &; // t=0..65536
+    auto lerp(pixel, std::uint32_t) -> pixel &; // t=0..65536
     auto clamp_premult() -> pixel &;
     auto set_alpha(alpha16_t) -> pixel &;
     auto set_alpha(alpha8_t) -> pixel &;
@@ -178,11 +178,19 @@ auto operator&(pixel lhs, pixel rhs) -> pixel;
 auto operator*(pixel lhs, std::uint16_t) -> pixel;
 auto operator*(std::uint16_t, pixel lhs) -> pixel;
 
-auto lerp(pixel lhs, pixel rhs, uint16_t t) -> pixel; // t=0..65536
+auto lerp(pixel lhs, pixel rhs, uint32_t t) -> pixel; // t=0..65536
 
+// composite
 auto clampPremult(pixel p) -> pixel;
 auto compositeAdd(pixel lhs, pixel rhs) -> pixel;
 auto compositeMulC(pixel lhs, pixel rhs) -> pixel;
 auto compositeROver(pixel lhs, pixel rhs) -> pixel;
 auto compositeScreen(pixel lhs, pixel rhs) -> pixel;
+
+// combine
+auto combineOver(pixel lhs, pixel rhs) -> pixel;
+auto combineMultiply(pixel lhs, pixel rhs) -> pixel;
+auto combineScreen(pixel lhs, pixel rhs) -> pixel;
+auto combineDarken(pixel lhs, pixel rhs) -> pixel;
+auto combineLighten(pixel lhs, pixel rhs) -> pixel;
 } // namespace openktg

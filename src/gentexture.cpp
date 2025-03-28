@@ -738,7 +738,7 @@ void GenTexture::ColorMatrixTransform(const GenTexture &x, const Matrix44 &matri
         openktg::pixel &out = Data[i];
         const openktg::pixel &in = x.Data[i];
 
-        // some king of pixel matrix multiplication
+        // some kind of pixel matrix multiplication
         sInt r = MulShift16(m[0][0], in.r()) + MulShift16(m[0][1], in.g()) + MulShift16(m[0][2], in.b()) + MulShift16(m[0][3], in.a());
         sInt g = MulShift16(m[1][0], in.r()) + MulShift16(m[1][1], in.g()) + MulShift16(m[1][2], in.b()) + MulShift16(m[1][3], in.a());
         sInt b = MulShift16(m[2][0], in.r()) + MulShift16(m[2][1], in.g()) + MulShift16(m[2][2], in.b()) + MulShift16(m[2][3], in.a());
@@ -1090,7 +1090,7 @@ void GenTexture::Ternary(const GenTexture &in1Tex, const GenTexture &in2Tex, con
         switch (op)
         {
         case TernaryLerp:
-            out = (in3 * in2) + (~in3 * in1);
+            out = (~in3.r() * in1) + (in3.r() * in2);
             // out.r = MulIntens(65535 - in3.r, in1.r) + MulIntens(in3.r, in2.r);
             // out.g = MulIntens(65535 - in3.r, in1.g) + MulIntens(in3.r, in2.g);
             // out.b = MulIntens(65535 - in3.r, in1.b) + MulIntens(in3.r, in2.b);
@@ -1212,7 +1212,7 @@ void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 or
                 }
 
                 case CombineOver: {
-                    *out = openktg::compositeROver(in, *out);
+                    *out = openktg::combineOver(in, *out);
                     // transIn = 65535 - in.a;
 
                     // out->r = MulIntens(transIn, out->r) + in.r;
@@ -1223,13 +1223,7 @@ void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 or
                 }
 
                 case CombineMultiply: {
-                    transIn = ~(in.a());
-                    transOut = ~(out->a());
-
-                    const auto new_alpha = out->a() + openktg::utility::mul_intens(in.a(), transOut);
-
-                    *out = (*out * transIn) + (in * transOut) + (*out * in);
-                    out->set_alpha(static_cast<openktg::alpha16_t>(new_alpha));
+                    *out = openktg::combineMultiply(in, *out);
 
                     // out->r = MulIntens(transIn, out->r) + MulIntens(transOut, in.r) + MulIntens(in.r, out->r);
                     // out->g = MulIntens(transIn, out->g) + MulIntens(transOut, in.g) + MulIntens(in.g, out->g);
@@ -1239,7 +1233,7 @@ void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 or
                 }
 
                 case CombineScreen: {
-                    *out += in * ~(*out);
+                    *out = openktg::combineScreen(in, *out);
                     // out->r += MulIntens(in.r, 65535 - out->r);
                     // out->g += MulIntens(in.g, 65535 - out->g);
                     // out->b += MulIntens(in.b, 65535 - out->b);
@@ -1248,10 +1242,7 @@ void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 or
                 }
 
                 case CombineDarken: {
-                    const auto new_alpha = out->a() + openktg::utility::mul_intens(in.a(), ~(out->a()));
-
-                    *out += in - ((in * out->a()) | (*out * in.a()));
-                    out->set_alpha(static_cast<openktg::alpha16_t>(new_alpha));
+                    *out = openktg::combineDarken(in, *out);
 
                     // out->r += in.r - sMax(MulIntens(in.r, out->a), MulIntens(out->r, in.a));
                     // out->g += in.g - sMax(MulIntens(in.g, out->a), MulIntens(out->g, in.a));
@@ -1263,8 +1254,7 @@ void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 or
                 case CombineLighten: {
                     const auto new_alpha = out->a() + openktg::utility::mul_intens(in.a(), ~(out->a()));
 
-                    *out += in - ((in * out->a()) & (*out * in.a()));
-                    out->set_alpha(static_cast<openktg::alpha16_t>(new_alpha));
+                    *out = openktg::combineLighten(in, *out);
 
                     // out->r += in.r - sMin(MulIntens(in.r, out->a), MulIntens(out->r, in.a));
                     // out->g += in.g - sMin(MulIntens(in.g, out->a), MulIntens(out->g, in.a));

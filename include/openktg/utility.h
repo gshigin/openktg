@@ -10,6 +10,12 @@
 
 namespace openktg::utility
 {
+// Expands 8bit value to 16bit by concating value twice
+OKTG(always_inline) constexpr auto expand8to16(std::uint8_t x) noexcept -> std::uint16_t
+{
+    return (std::uint16_t{x} << 8) | x;
+}
+
 // Return true if x is a power of 2, false otherwise
 OKTG(always_inline) constexpr auto is_pow_of_2(std::int32_t x) noexcept -> bool
 {
