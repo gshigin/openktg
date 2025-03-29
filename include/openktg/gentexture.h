@@ -4,9 +4,7 @@
 /***   I hereby place this code in the public domain.                     ***/
 /***                                                                      ***/
 /****************************************************************************/
-
-#ifndef __TP_GENTEXTURE_HPP_
-#define __TP_GENTEXTURE_HPP_
+#pragma once
 
 #include <openktg/matrix.h>
 #include <openktg/pixel.h>
@@ -153,5 +151,3 @@ struct GenTexture
 
 // Initialize the generator
 void InitTexgen();
-
-#endif // __TP_GENTEXTURE_HPP_
