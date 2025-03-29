@@ -57,9 +57,9 @@ struct xoshiro128
         return next();
     }
 
-    constexpr auto fork() noexcept -> xoshiro 128
+    constexpr auto fork() noexcept -> xoshiro128
     {
-        return xoshiro 128 {next(), next()};
+        return xoshiro128{next(), next()};
     }
 
     static constexpr auto min() noexcept -> std::uint64_t
