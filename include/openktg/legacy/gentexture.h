@@ -145,8 +145,8 @@ struct GenTexture
     void Ternary(const GenTexture &in1, const GenTexture &in2, const GenTexture &in3, TernaryOp op);
     void Paste(const GenTexture &background, const GenTexture &snippet, sF32 orgx, sF32 orgy, sF32 ux, sF32 uy, sF32 vx, sF32 vy, CombineOp op, sInt mode);
     void Bump(const GenTexture &surface, const GenTexture &normals, const GenTexture *specular, const GenTexture *falloff, sF32 px, sF32 py, sF32 pz, sF32 dx,
-              sF32 dy, sF32 dz, const openktg::core::pixel &ambient, const openktg::core::pixel &diffuse, sBool directional);
-    void LinearCombine(const openktg::core::pixel &color, sF32 constWeight, const LinearInput *inputs, sInt nInputs);
+              sF32 dy, sF32 dz, const openktg::pixel &ambient, const openktg::pixel &diffuse, sBool directional);
+    void LinearCombine(const openktg::pixel &color, sF32 constWeight, const LinearInput *inputs, sInt nInputs);
 };
 
 // Initialize the generator
