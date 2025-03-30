@@ -35,13 +35,51 @@ constexpr auto seed_time() -> std::uint64_t
                 static_cast<std::uint64_t>(__TIME__[4]) << 32 | static_cast<std::uint64_t>(__TIME__[6]) << 24 | static_cast<std::uint64_t>(__TIME__[7]) << 16);
 }
 
-struct xoshiro128
+struct xoshiro128ss
 {
     std::uint64_t state[2];
 
     constexpr auto next() noexcept -> std::uint64_t
     {
-        std::uint64_t s0 = state[0];
+        const std::uint64_t s0 = state[0];
+        std::uint64_t s1 = state[1];
+        std::uint64_t result = _random::rotl(s0 * 5, 7) * 9;
+
+        s1 ^= s0;
+        state[0] = _random::rotl(s0, 24) ^ s1 ^ (s1 << 16);
+        state[1] = _random::rotl(s1, 37);
+
+        return result;
+    }
+
+    constexpr auto operator()() noexcept -> std::uint64_t
+    {
+        return next();
+    }
+
+    constexpr auto fork() noexcept -> xoshiro128ss
+    {
+        return xoshiro128ss{next(), next()};
+    }
+
+    static constexpr auto min() noexcept -> std::uint64_t
+    {
+        return 0;
+    }
+    static constexpr auto max() noexcept -> std::uint64_t
+    {
+        return UINT64_MAX;
+    }
+    using result_type = std::uint64_t;
+};
+
+struct xoshiro128pp
+{
+    std::uint64_t state[2];
+
+    constexpr auto next() noexcept -> std::uint64_t
+    {
+        const std::uint64_t s0 = state[0];
         std::uint64_t s1 = state[1];
         std::uint64_t result = _random::rotl(s0 + s1, 17) + s0;
 
@@ -57,9 +95,9 @@ struct xoshiro128
         return next();
     }
 
-    constexpr auto fork() noexcept -> xoshiro128
+    constexpr auto fork() noexcept -> xoshiro128ss
     {
-        return xoshiro128{next(), next()};
+        return xoshiro128ss{next(), next()};
     }
 
     static constexpr auto min() noexcept -> std::uint64_t
@@ -73,7 +111,7 @@ struct xoshiro128
     using result_type = std::uint64_t;
 };
 
-struct xoshiro256
+struct xoshiro256ss
 {
     uint64_t state[4];
 
@@ -100,9 +138,9 @@ struct xoshiro256
         return next();
     }
 
-    constexpr auto fork() noexcept -> xoshiro256
+    constexpr auto fork() noexcept -> xoshiro256ss
     {
-        return xoshiro256{next(), next(), next(), next()};
+        return xoshiro256ss{next(), next(), next(), next()};
     }
 
     static constexpr auto min() noexcept -> std::uint64_t
@@ -113,6 +151,49 @@ struct xoshiro256
     {
         return UINT64_MAX;
     }
-    using result_type = uint64_t;
+    using result_type = std::uint64_t;
+};
+
+struct xoshiro256pp
+{
+    uint64_t state[4];
+
+    constexpr auto next() noexcept -> std::uint64_t
+    {
+        const std::uint64_t result = _random::rotl(state[1] * 5, 7) * 9;
+
+        const std::uint64_t t = state[1] << 17;
+
+        state[2] ^= state[0];
+        state[3] ^= state[1];
+        state[1] ^= state[2];
+        state[0] ^= state[3];
+
+        state[2] ^= t;
+
+        state[3] = _random::rotl(state[3], 45);
+
+        return result;
+    }
+
+    constexpr auto operator()() noexcept -> std::uint64_t
+    {
+        return next();
+    }
+
+    constexpr auto fork() noexcept -> xoshiro256ss
+    {
+        return xoshiro256ss{next(), next(), next(), next()};
+    }
+
+    static constexpr auto min() noexcept -> std::uint64_t
+    {
+        return 0;
+    }
+    static constexpr auto max() noexcept -> std::uint64_t
+    {
+        return UINT64_MAX;
+    }
+    using result_type = std::uint64_t;
 };
 } // namespace openktg::random

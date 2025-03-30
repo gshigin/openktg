@@ -36,17 +36,17 @@ OKTG(always_inline) constexpr auto floor_log_2(std::int32_t x) noexcept -> std::
     return 31 - std::countl_zero(static_cast<std::uint32_t>(x));
 }
 
-template <std::floating_point T> OKTG(always_inline) constexpr auto lerp(T a, T b, T t) noexcept -> T
-{
-    return std::fma(t, b - a, a);
-}
-
 // Linearly interpolate between a and b with t=0..65536 [0,1]
 // 0 <= a, b < 65536.
 OKTG(always_inline) constexpr auto lerp(std::uint16_t a, std::uint16_t b, std::uint32_t t) noexcept -> std::uint16_t
 {
     t = std::clamp<std::uint32_t>(t, 0x0, 0x10000);
     return a + ((t * (static_cast<std::int32_t>(b) - static_cast<std::int32_t>(a))) >> 16);
+}
+
+template <std::floating_point T> OKTG(always_inline) constexpr auto lerp(T a, T b, T t) noexcept -> T
+{
+    return std::fma(t, b - a, a);
 }
 
 // Multiply intensities.

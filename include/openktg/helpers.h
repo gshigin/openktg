@@ -1,16 +1,16 @@
 #pragma once
 
 #include <cmath>
+
+#include <openktg/macro.h>
 #include <openktg/types.h>
+#include <openktg/utility.h>
 
 /****************************************************************************/
 /***                                                                      ***/
 /***   Helpers                                                            ***/
 /***                                                                      ***/
 /****************************************************************************/
-
-#include <openktg/macro.h>
-#include <openktg/utility.h>
 
 // Return sTRUE if x is a power of 2, sFALSE otherwise
 OKTG(always_inline) auto IsPowerOf2(sInt x) noexcept -> sBool

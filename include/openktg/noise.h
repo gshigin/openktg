@@ -1,137 +1,106 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
+#include <numeric>
 
-#include <openktg/helpers.h>
-#include <openktg/types.h>
+#include <openktg/random.h>
+#include <openktg/utility.h>
 
 struct PerlinNoise
 {
-    static constexpr size_t TableSize = 4096;
-    static constexpr size_t seed = 0x93638245u;
+    static constexpr std::size_t TableSize = 4096;
+    static constexpr std::size_t seed = 0x93638245u;
 
-    static constexpr auto GeneratePtable(std::uint32_t seed) -> std::array<sU16, TableSize>
+    static constexpr auto GeneratePtable(std::uint32_t seed) -> std::array<std::uint16_t, TableSize>
     {
-        std::uint32_t poly = 0xc0000401u;
-        std::array<sU16, TableSize> table{};
+        std::array<std::uint16_t, TableSize> table{};
+        std::iota(table.begin(), table.end(), 0);
 
-        struct mpair
+        openktg::random::xoshiro128ss rng{openktg::random::seed(seed), openktg::random::seed(openktg::random::seed(seed))};
+        for (std::size_t i = TableSize - 1; i > 0; --i)
         {
-            sU32 hex;
-            sU16 idx;
-        };
-
-        std::array<mpair, TableSize> temp{};
-
-        for (std::size_t i = 0; i < TableSize; ++i)
-        {
-            temp[i] = {seed, static_cast<sU16>(i)};
-            seed = (seed << 1) ^ ((seed & 0x80000000u) ? 0xc0000401u : 0);
-        }
-
-        std::sort(temp.begin(), temp.end(), [](const auto &a, const auto &b) { return a.hex < b.hex; });
-
-        for (std::size_t i = 0; i < TableSize; ++i)
-        {
-            table[i] = temp[i].idx;
+            std::swap(table[i], table[rng() % (i + 1)]);
         }
 
         return table;
     }
 
-    inline static std::array<sU16, TableSize> Ptable = GeneratePtable(seed);
+    inline static std::array<std::uint16_t, TableSize> Ptable = GeneratePtable(seed);
 
-    // static void initializeTable()
-    // {
-    //     Ptable = GeneratePtable(seed);
-    // }
-
-    [[nodiscard]] static constexpr auto P(sInt i) -> sInt
+    [[nodiscard]] static constexpr auto P(int i) -> int
     {
         return Ptable[i & (TableSize - 1)];
     }
 
-    [[nodiscard]] static constexpr auto PGradient2(sInt hash, sF32 x, sF32 y) -> sF32
+    [[nodiscard]] static constexpr auto PGradient2(int hash, float x, float y) -> float
     {
+        constexpr float signs[8][2] = {{1.0f, 2.0f}, {-1.0f, 2.0f}, {1.0f, -2.0f}, {-1.0f, -2.0f}, {1.0f, 2.0f}, {-1.0f, 2.0f}, {1.0f, -2.0f}, {-1.0f, -2.0f}};
+
         hash &= 7;
-        sF32 u = x * ((hash & 4) ? -1.0f : 1.0f);
-        sF32 v = y * ((hash & 2) ? -2.0f : 2.0f);
-        return ((hash & 1) ? -u : u) + v;
+        return x * signs[hash][0] + y * signs[hash][1];
     }
 
-    [[nodiscard]] static constexpr auto Noise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed) -> sF32
+    [[nodiscard]] static constexpr auto Noise2(int x, int y, int maskx, int masky, int seed) -> float
     {
-        const sInt M = 0x10000;
-        const sInt X = x >> 16, Y = y >> 16;
-        const sF32 fx = (x & (M - 1)) * (1.0f / M);
-        const sF32 fy = (y & (M - 1)) * (1.0f / M);
-        const sF32 u = SmoothStep(fx);
-        const sF32 v = SmoothStep(fy);
+        constexpr float InvM = 1.0f / 0x10000;
+        const int X = x >> 16, Y = y >> 16;
+        const float fx = (x & 0xFFFF) * InvM;
+        const float fy = (y & 0xFFFF) * InvM;
+
+        const float u = SmoothStep(fx);
+        const float v = SmoothStep(fy);
+
         maskx &= TableSize - 1;
         masky &= TableSize - 1;
 
-        const sInt px0 = (X + 0) & maskx;
-        const sInt px1 = (X + 1) & maskx;
-        const sInt py0 = (Y + 0) & masky;
-        const sInt py1 = (Y + 1) & masky;
+        const int px0 = X & maskx;
+        const int px1 = (X + 1) & maskx;
+        const int py0 = Y & masky;
+        const int py1 = (Y + 1) & masky;
 
-        const sInt Ppy0 = P(py0);
-        const sInt Ppy1 = P(py1);
+        const int Ppy0 = P(py0);
+        const int Ppy1 = P(py1);
 
-        const sF32 p00 = (P(px0 + Ppy0 + seed) / 2047.5f) - 1.0f;
-        const sF32 p10 = (P(px1 + Ppy0 + seed) / 2047.5f) - 1.0f;
-        const sF32 p01 = (P(px0 + Ppy1 + seed) / 2047.5f) - 1.0f;
-        const sF32 p11 = (P(px1 + Ppy1 + seed) / 2047.5f) - 1.0f;
+        const float p00 = (P(px0 + Ppy0 + seed) / 2047.5f) - 1.0f;
+        const float p10 = (P(px1 + Ppy0 + seed) / 2047.5f) - 1.0f;
+        const float p01 = (P(px0 + Ppy1 + seed) / 2047.5f) - 1.0f;
+        const float p11 = (P(px1 + Ppy1 + seed) / 2047.5f) - 1.0f;
 
-        return LerpF(v, LerpF(u, p00, p10), LerpF(u, p01, p11));
+        return openktg::utility::lerp(openktg::utility::lerp(p00, p10, u), openktg::utility::lerp(p01, p11, u), v);
     }
 
-    static constexpr auto SmoothStep(sF32 x) -> sF32
+    static constexpr auto SmoothStep(float x) -> float
     {
         return x * x * x * (10 + x * (6 * x - 15));
     }
 
-    static constexpr auto GShuffle(sInt x, sInt y, sInt z) -> sInt
+    static constexpr auto GShuffle(int x, int y, int z) -> int
     {
-        /*sU32 seed = ((x & 0x3ff) << 20) | ((y & 0x3ff) << 10) | (z & 0x3ff);
-
-        seed ^= seed << 3;
-        seed += seed >> 5;
-        seed ^= seed << 4;
-        seed += seed >> 17;
-        seed ^= seed << 25;
-        seed += seed >> 6;
-
-        return seed;*/
-
         return P(P(P(x) + y) + z);
     }
 
     // 2D grid noise function (tiling)
-    static constexpr auto GNoise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed) -> sF32
+    static constexpr auto GNoise2(int x, int y, int maskx, int masky, int seed) -> float
     {
-        // input coordinates
-        sInt i = x >> 16;
-        sInt j = y >> 16;
-        sF32 xp = (x & 0xffff) / 65536.0f;
-        sF32 yp = (y & 0xffff) / 65536.0f;
-        sF32 sum = 0.0f;
+        int i = x >> 16;
+        int j = y >> 16;
+        float xp = (x & 0xFFFF) * (1.0f / 65536.0f);
+        float yp = (y & 0xFFFF) * (1.0f / 65536.0f);
+        float sum = 0.0f;
 
-        // sum over grid vertices
-        for (sInt oy = 0; oy <= 1; oy++)
+        for (int oy = 0; oy <= 1; oy++)
         {
-            for (sInt ox = 0; ox <= 1; ox++)
+            for (int ox = 0; ox <= 1; ox++)
             {
-                sF32 xr = xp - ox;
-                sF32 yr = yp - oy;
+                float xr = xp - ox;
+                float yr = yp - oy;
+                float t = 1.0f - (xr * xr + yr * yr);
 
-                sF32 t = xr * xr + yr * yr;
-                if (t < 1.0f)
+                if (t > 0.0f)
                 {
-                    t = 1.0f - t;
-                    t *= t;
-                    t *= t;
+                    t = t * t * t * t; // pow(t, 4)
                     sum += t * PGradient2(GShuffle((i + ox) & maskx, (j + oy) & masky, seed), xr, yr);
                 }
             }
