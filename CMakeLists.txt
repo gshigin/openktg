@@ -16,6 +16,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     add_link_options(-fsanitize=address)
 endif()
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
+
 add_library(${PROJECT_NAME} 
     src/gentexture.cpp
     src/pixel.cpp
