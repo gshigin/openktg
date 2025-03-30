@@ -5,6 +5,7 @@
 /***                                                                      ***/
 /****************************************************************************/
 
+#include "openktg/matrix.h"
 #include "openktg/pixel.h"
 #include <openktg/gentexture.h>
 #include <openktg/procedural.h>
@@ -217,7 +218,7 @@ int main()
     }
 
     // Create transform matrix for grid pattern
-    Matrix44 m1, m2, m3;
+    openktg::matrix44<float> m1, m2, m3;
     MatTranslate(m1, -0.5f, -0.5f, 0.0f);
     MatScale(m2, 3.0f * sSQRT2F, 3.0f * sSQRT2F, 1.0f);
     MatMult(m3, m2, m1);

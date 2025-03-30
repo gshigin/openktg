@@ -1,5 +1,6 @@
 #pragma once
 
+#include "openktg/matrix.h"
 #include <cassert>
 #include <random>
 
@@ -80,22 +81,20 @@ static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensi
 // Transforms a grayscale image to a colored one with a matrix transform
 static void Colorize(GenTexture &img, sU32 startCol, sU32 endCol)
 {
-    Matrix44 m;
+    openktg::matrix44<float> m;
     openktg::pixel s{static_cast<openktg::color32_t>(startCol)};
     openktg::pixel e{static_cast<openktg::color32_t>(endCol)};
 
-    // s.Init(startCol);
-    // e.Init(endCol);
-
     // calculate matrix
-    sSetMem(m, 0, sizeof(m));
-    m[0][0] = (e.r() - s.r()) / 65535.0f;
-    m[1][1] = (e.g() - s.g()) / 65535.0f;
-    m[2][2] = (e.b() - s.b()) / 65535.0f;
-    m[3][3] = 1.0f;
-    m[0][3] = s.r() / 65535.0f;
-    m[1][3] = s.g() / 65535.0f;
-    m[2][3] = s.b() / 65535.0f;
+    // sSetMem(m, 0, sizeof(m));
+    m.data.fill(0);
+    m.get(0, 0) = (e.r() - s.r()) / 65535.0f;
+    m.get(1, 1) = (e.g() - s.g()) / 65535.0f;
+    m.get(2, 2) = (e.b() - s.b()) / 65535.0f;
+    m.get(3, 3) = 1.0f;
+    m.get(0, 3) = s.r() / 65535.0f;
+    m.get(1, 3) = s.g() / 65535.0f;
+    m.get(2, 3) = s.b() / 65535.0f;
 
     // transform
     img.ColorMatrixTransform(img, m, sTRUE);

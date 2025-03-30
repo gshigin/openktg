@@ -134,8 +134,8 @@ struct GenTexture
     void Cells(const GenTexture &grad, const CellCenter *centers, sInt nCenters, sF32 amp, sInt mode);
 
     // Filters
-    void ColorMatrixTransform(const GenTexture &in, const Matrix44 &matrix, sBool clampPremult);
-    void CoordMatrixTransform(const GenTexture &in, const Matrix44 &matrix, sInt filterMode);
+    void ColorMatrixTransform(const GenTexture &in, const openktg::matrix44<float> &matrix, sBool clampPremult);
+    void CoordMatrixTransform(const GenTexture &in, const openktg::matrix44<float> &matrix, sInt filterMode);
     void ColorRemap(const GenTexture &in, const GenTexture &mapR, const GenTexture &mapG, const GenTexture &mapB);
     void CoordRemap(const GenTexture &in, const GenTexture &remap, sF32 strengthU, sF32 strengthV, sInt filterMode);
     void Derive(const GenTexture &in, DeriveOp op, sF32 strength);
