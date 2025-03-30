@@ -5,292 +5,13 @@
 /***                                                                      ***/
 /****************************************************************************/
 
-#include <array>
+#include <algorithm>
 #include <cassert>
 
-#include <openktg/gentexture.h>
-#include <openktg/helpers.h>
-#include <openktg/pixel.h>
-
-// struct Perlin
-// {
-//     static constexpr size_t TableSize = 4096;
-
-//     constexpr Perlin() : Perlin(0x93638245u)
-//     {
-//     }
-
-//     constexpr Perlin(sU32 seed) : Ptable(GeneratePtable(seed))
-//     {
-//     }
-
-//     std::array<sU16, TableSize> Ptable;
-
-//     static constexpr auto GeneratePtable(std::uint32_t seed) -> std::array<sU16, TableSize>
-//     {
-//         std::uint32_t poly = 0xc0000401u;
-//         std::array<sU16, TableSize> table{};
-
-//         struct mpair
-//         {
-//             sU32 hex;
-//             sU16 idx;
-//         };
-
-//         std::array<mpair, TableSize> temp{};
-
-//         for (std::size_t i = 0; i < TableSize; ++i)
-//         {
-//             temp[i] = {seed, static_cast<sU16>(i)};
-//             seed = (seed << 1) ^ (-(seed >> 31) & poly);
-//         }
-
-//         std::sort(temp.begin(), temp.end(), [](const auto &a, const auto &b) { return a.hex < b.hex; });
-
-//         for (std::size_t i = 0; i < TableSize; ++i)
-//         {
-//             table[i] = temp[i].idx;
-//         }
-
-//         return table;
-//     }
-
-//     [[nodiscard]] constexpr auto P(sInt i) const -> sInt
-//     {
-//         return Ptable[i & (TableSize - 1)];
-//     }
-
-//     [[nodiscard]] constexpr auto PGradient2(sInt hash, sF32 x, sF32 y) const -> sF32
-//     {
-//         hash &= 7;
-//         sF32 u = x * ((hash & 4) ? -1.0f : 1.0f);
-//         sF32 v = y * ((hash & 2) ? -2.0f : 2.0f);
-//         return ((hash & 1) ? -u : u) + v;
-//     }
-
-//     [[nodiscard]] constexpr auto Noise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed) const -> sF32
-//     {
-//         const sInt M = 0x10000;
-//         const sInt X = x >> 16, Y = y >> 16;
-//         const sF32 fx = (x & (M - 1)) * (1.0f / M);
-//         const sF32 fy = (y & (M - 1)) * (1.0f / M);
-//         const sF32 u = SmoothStep(fx);
-//         const sF32 v = SmoothStep(fy);
-//         maskx &= TableSize - 1;
-//         masky &= TableSize - 1;
-
-//         const sInt px0 = (X + 0) & maskx;
-//         const sInt px1 = (X + 1) & maskx;
-//         const sInt py0 = (Y + 0) & masky;
-//         const sInt py1 = (Y + 1) & masky;
-
-//         const sInt Ppy0 = P(py0);
-//         const sInt Ppy1 = P(py1);
-
-//         const sF32 p00 = (P(px0 + Ppy0 + seed) / 2047.5f) - 1.0f;
-//         const sF32 p10 = (P(px1 + Ppy0 + seed) / 2047.5f) - 1.0f;
-//         const sF32 p01 = (P(px0 + Ppy1 + seed) / 2047.5f) - 1.0f;
-//         const sF32 p11 = (P(px1 + Ppy1 + seed) / 2047.5f) - 1.0f;
-
-//         return LerpF(v, LerpF(u, p00, p10), LerpF(u, p01, p11));
-//     }
-
-//     static constexpr auto SmoothStep(sF32 x) -> sF32
-//     {
-//         return x * x * x * (10 + x * (6 * x - 15));
-//     }
-
-//     auto GShuffle(sInt x, sInt y, sInt z) -> sInt
-//     {
-//         /*sU32 seed = ((x & 0x3ff) << 20) | ((y & 0x3ff) << 10) | (z & 0x3ff);
-
-//         seed ^= seed << 3;
-//         seed += seed >> 5;
-//         seed ^= seed << 4;
-//         seed += seed >> 17;
-//         seed ^= seed << 25;
-//         seed += seed >> 6;
-
-//         return seed;*/
-
-//         return P(P(P(x) + y) + z);
-//     }
-
-//     // 2D grid noise function (tiling)
-//     auto GNoise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed) -> sF32
-//     {
-//         // input coordinates
-//         sInt i = x >> 16;
-//         sInt j = y >> 16;
-//         sF32 xp = (x & 0xffff) / 65536.0f;
-//         sF32 yp = (y & 0xffff) / 65536.0f;
-//         sF32 sum = 0.0f;
-
-//         // sum over grid vertices
-//         for (sInt oy = 0; oy <= 1; oy++)
-//         {
-//             for (sInt ox = 0; ox <= 1; ox++)
-//             {
-//                 sF32 xr = xp - ox;
-//                 sF32 yr = yp - oy;
-
-//                 sF32 t = xr * xr + yr * yr;
-//                 if (t < 1.0f)
-//                 {
-//                     t = 1.0f - t;
-//                     t *= t;
-//                     t *= t;
-//                     sum += t * PGradient2(GShuffle((i + ox) & maskx, (j + oy) & masky, seed), xr, yr);
-//                 }
-//             }
-//         }
-
-//         return sum;
-//     }
-// };
-
-// Perlin permutation table
-static sU16 Ptable[4096];
-static sU32 *Ptemp;
-
-static auto P(sInt i) -> sInt
-{
-    return Ptable[i & 4095];
-}
-
-// Initialize perlin
-static auto InitPerlinCompare(const void *e1, const void *e2) -> int
-{
-    unsigned i1 = Ptemp[*((sU16 *)e1)];
-    unsigned i2 = Ptemp[*((sU16 *)e2)];
-
-    return i1 - i2;
-}
-
-static void InitPerlin()
-{
-    sU32 seed = 0x93638245u;
-    Ptemp = new sU32[4096];
-
-    // generate 4096 pseudorandom numbers using LFSR
-    for (sInt i = 0; i < 4096; i++)
-    {
-        Ptemp[i] = seed;
-        seed = (seed << 1) ^ ((seed & 0x80000000u) ? 0xc0000401u : 0);
-    }
-
-    for (sInt i = 0; i < 4096; i++)
-        Ptable[i] = i;
-
-    qsort(Ptable, 4096, sizeof(*Ptable), InitPerlinCompare);
-
-    delete[] Ptemp;
-    Ptemp = nullptr;
-}
-
-// Perlin gradient function
-static auto PGradient2(sInt hash, sF32 x, sF32 y) -> sF32
-{
-    hash &= 7;
-    sF32 u = hash < 4 ? x : y;
-    sF32 v = hash < 4 ? y : x;
-
-    return ((hash & 1) ? -u : u) + ((hash & 2) ? -2.0f * v : 2.0f * v);
-}
-
-// Perlin smoothstep function
-static auto SmoothStep(sF32 x) -> sF32
-{
-    return x * x * x * (10 + x * (6 * x - 15));
-}
-
-// 2D non-bandlimited noise function
-static auto Noise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed) -> sF32
-{
-    static const sInt M = 0x10000;
-
-    sInt X = x >> 16, Y = y >> 16;
-    sF32 fx = (x & (M - 1)) / 65536.0f;
-    sF32 fy = (y & (M - 1)) / 65536.0f;
-    sF32 u = SmoothStep(fx);
-    sF32 v = SmoothStep(fy);
-    maskx &= 4095;
-    masky &= 4095;
-
-    return LerpF(
-        v,
-        LerpF(u, (P(((X + 0) & maskx) + P(((Y + 0) & masky)) + seed)) / 2047.5f - 1.0f, (P(((X + 1) & maskx) + P(((Y + 0) & masky)) + seed)) / 2047.5f - 1.0f),
-        LerpF(u, (P(((X + 0) & maskx) + P(((Y + 1) & masky)) + seed)) / 2047.5f - 1.0f, (P(((X + 1) & maskx) + P(((Y + 1) & masky)) + seed)) / 2047.5f - 1.0f));
-}
-
-// 2D Perlin noise function
-static auto PNoise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed) -> sF32
-{
-    static const sInt M = 0x10000;
-    static const sF32 S = sFInvSqrt(5.0f);
-
-    sInt X = x >> 16, Y = y >> 16;
-    sF32 fx = (x & (M - 1)) / 65536.0f;
-    sF32 fy = (y & (M - 1)) / 65536.0f;
-    sF32 u = SmoothStep(fx);
-    sF32 v = SmoothStep(fy);
-    maskx &= 4095;
-    masky &= 4095;
-
-    return S * LerpF(v,
-                     LerpF(u, PGradient2((P(((X + 0) & maskx) + P(((Y + 0) & masky)) + seed)), fx, fy),
-                           PGradient2((P(((X + 1) & maskx) + P(((Y + 0) & masky)) + seed)), fx - 1.0f, fy)),
-                     LerpF(u, PGradient2((P(((X + 0) & maskx) + P(((Y + 1) & masky)) + seed)), fx, fy - 1.0f),
-                           PGradient2((P(((X + 1) & maskx) + P(((Y + 1) & masky)) + seed)), fx - 1.0f, fy - 1.0f)));
-}
-
-static auto GShuffle(sInt x, sInt y, sInt z) -> sInt
-{
-    /*sU32 seed = ((x & 0x3ff) << 20) | ((y & 0x3ff) << 10) | (z & 0x3ff);
-
-    seed ^= seed << 3;
-    seed += seed >> 5;
-    seed ^= seed << 4;
-    seed += seed >> 17;
-    seed ^= seed << 25;
-    seed += seed >> 6;
-
-    return seed;*/
-
-    return P(P(P(x) + y) + z);
-}
-
-// 2D grid noise function (tiling)
-static auto GNoise2(sInt x, sInt y, sInt maskx, sInt masky, sInt seed) -> sF32
-{
-    // input coordinates
-    sInt i = x >> 16;
-    sInt j = y >> 16;
-    sF32 xp = (x & 0xffff) / 65536.0f;
-    sF32 yp = (y & 0xffff) / 65536.0f;
-    sF32 sum = 0.0f;
-
-    // sum over grid vertices
-    for (sInt oy = 0; oy <= 1; oy++)
-    {
-        for (sInt ox = 0; ox <= 1; ox++)
-        {
-            sF32 xr = xp - ox;
-            sF32 yr = yp - oy;
-
-            sF32 t = xr * xr + yr * yr;
-            if (t < 1.0f)
-            {
-                t = 1.0f - t;
-                t *= t;
-                t *= t;
-                sum += t * PGradient2(GShuffle((i + ox) & maskx, (j + oy) & masky, seed), xr, yr);
-            }
-        }
-    }
-
-    return sum;
-}
+#include <openktg/core/pixel.h>
+#include <openktg/legacy/gentexture.h>
+#include <openktg/noise/perlin.h>
+#include <openktg/util/helpers.h>
 
 /****************************************************************************/
 /***                                                                      ***/
@@ -417,9 +138,9 @@ void GenTexture::SampleBilinear(openktg::pixel &result, sInt x, sInt y, sInt wra
     sInt fx = sU32(x << (ShiftX + 8)) >> 16;
     sInt fy = sU32(y << (ShiftY + 8)) >> 16;
 
-    openktg::pixel t0 = openktg::lerp(Data[(y0 << ShiftX) + x0], Data[(y0 << ShiftX) + x1], fx);
-    openktg::pixel t1 = openktg::lerp(Data[(y1 << ShiftX) + x0], Data[(y1 << ShiftX) + x1], fx);
-    result = openktg::lerp(t0, t1, fy);
+    openktg::pixel t0 = lerp(Data[(y0 << ShiftX) + x0], Data[(y0 << ShiftX) + x1], fx);
+    openktg::core::pixel t1 = lerp(Data[(y1 << ShiftX) + x0], Data[(y1 << ShiftX) + x1], fx);
+    result = lerp(t0, t1, fy);
 }
 
 void GenTexture::SampleFiltered(openktg::pixel &result, sInt x, sInt y, sInt filterMode) const
@@ -439,7 +160,7 @@ void GenTexture::SampleGradient(openktg::pixel &result, sInt x) const
     sInt x1 = (x0 + 1) & (XRes - 1);
     sInt fx = sU32(x << (ShiftX + 8)) >> 16;
 
-    result = openktg::lerp(Data[x0], Data[x1], fx);
+    result = lerp(Data[x0], Data[x1], fx);
 }
 
 // ---- The operators themselves
@@ -448,7 +169,7 @@ void GenTexture::Noise(const GenTexture &grad, sInt freqX, sInt freqY, sInt oct,
 {
     assert(oct > 0);
 
-    seed = P(seed);
+    seed = PerlinNoise::P(seed);
 
     sInt offset;
     sF32 scaling;
@@ -487,7 +208,7 @@ void GenTexture::Noise(const GenTexture &grad, sInt freqX, sInt freqY, sInt oct,
 
             for (sInt i = 0; i < oct; i++)
             {
-                sF32 nv = (mode & NoiseBandlimit) ? Noise2(px, py, mx, my, seed) : GNoise2(px, py, mx, my, seed);
+                sF32 nv = (mode & NoiseBandlimit) ? PerlinNoise::Noise2(px, py, mx, my, seed) : PerlinNoise::GNoise2(px, py, mx, my, seed);
                 if (mode & NoiseAbs)
                     nv = sFAbs(nv);
 
@@ -557,7 +278,7 @@ void GenTexture::GlowRect(const GenTexture &bgTex, const GenTexture &grad, sF32 
                 if (!du && !dv)
                 {
                     grad.SampleGradient(col, 0);
-                    *out = openktg::compositeROver(*out, col);
+                    *out = compositeROver(*out, col);
                 }
                 else
                 {
@@ -568,7 +289,7 @@ void GenTexture::GlowRect(const GenTexture &bgTex, const GenTexture &grad, sF32 
                     if (dist < 1.0f)
                     {
                         grad.SampleGradient(col, (1 << 24) * sFSqrt(dist));
-                        *out = openktg::compositeROver(*out, col);
+                        *out = compositeROver(*out, col);
                     }
                 }
             }
@@ -718,20 +439,24 @@ void GenTexture::Cells(const GenTexture &grad, const CellCenter *centers, sInt n
     delete[] points;
 }
 
-void GenTexture::ColorMatrixTransform(const GenTexture &x, const Matrix44 &matrix, sBool clampPremult)
+void GenTexture::ColorMatrixTransform(const GenTexture &x, const openktg::matrix44<float> &matrix, sBool clampPremult)
 {
-    sInt m[4][4];
+    // sInt m[4][4];
+    openktg::matrix44<int> m;
+    std::transform(matrix.data.begin(), matrix.data.end(), m.data.begin(), [](const auto &fv) { return fv * 65536.0f; });
 
     assert(SizeMatchesWith(x));
 
-    for (sInt i = 0; i < 4; i++)
-    {
-        for (sInt j = 0; j < 4; j++)
-        {
-            assert(matrix[i][j] >= -127.0f && matrix[i][j] <= 127.0f);
-            m[i][j] = matrix[i][j] * 65536.0f;
-        }
-    }
+    // for (sInt i = 0; i < 4; i++)
+    // {
+    //     for (sInt j = 0; j < 4; j++)
+    //     {
+    //         assert(matrix[i][j] >= -127.0f && matrix[i][j] <= 127.0f);
+    //         m[i][j] = matrix[i][j] * 65536.0f;
+    //     }
+    // }
+
+    std::transform(matrix.data.begin(), matrix.data.end(), m.data.begin(), [](const auto &fv) { return fv * 65536.0f; });
 
     for (sInt i = 0; i < NPixels; i++)
     {
@@ -739,10 +464,10 @@ void GenTexture::ColorMatrixTransform(const GenTexture &x, const Matrix44 &matri
         const openktg::pixel &in = x.Data[i];
 
         // some kind of pixel matrix multiplication
-        sInt r = MulShift16(m[0][0], in.r()) + MulShift16(m[0][1], in.g()) + MulShift16(m[0][2], in.b()) + MulShift16(m[0][3], in.a());
-        sInt g = MulShift16(m[1][0], in.r()) + MulShift16(m[1][1], in.g()) + MulShift16(m[1][2], in.b()) + MulShift16(m[1][3], in.a());
-        sInt b = MulShift16(m[2][0], in.r()) + MulShift16(m[2][1], in.g()) + MulShift16(m[2][2], in.b()) + MulShift16(m[2][3], in.a());
-        sInt a = MulShift16(m[3][0], in.r()) + MulShift16(m[3][1], in.g()) + MulShift16(m[3][2], in.b()) + MulShift16(m[3][3], in.a());
+        sInt r = MulShift16(m.get(0, 0), in.r()) + MulShift16(m.get(0, 1), in.g()) + MulShift16(m.get(0, 2), in.b()) + MulShift16(m.get(0, 3), in.a());
+        sInt g = MulShift16(m.get(1, 0), in.r()) + MulShift16(m.get(1, 1), in.g()) + MulShift16(m.get(1, 2), in.b()) + MulShift16(m.get(1, 3), in.a());
+        sInt b = MulShift16(m.get(2, 0), in.r()) + MulShift16(m.get(2, 1), in.g()) + MulShift16(m.get(2, 2), in.b()) + MulShift16(m.get(2, 3), in.a());
+        sInt a = MulShift16(m.get(3, 0), in.r()) + MulShift16(m.get(3, 1), in.g()) + MulShift16(m.get(3, 2), in.b()) + MulShift16(m.get(3, 3), in.a());
 
         a = sClamp<sInt>(a, 0, 65535);
         r = sClamp<sInt>(r, 0, 65535);
@@ -759,19 +484,19 @@ void GenTexture::ColorMatrixTransform(const GenTexture &x, const Matrix44 &matri
     }
 }
 
-void GenTexture::CoordMatrixTransform(const GenTexture &in, const Matrix44 &matrix, sInt mode)
+void GenTexture::CoordMatrixTransform(const GenTexture &in, const openktg::matrix44<float> &matrix, sInt mode)
 {
     sInt scaleX = 1 << (24 - ShiftX);
     sInt scaleY = 1 << (24 - ShiftY);
 
-    sInt dudx = matrix[0][0] * scaleX;
-    sInt dudy = matrix[0][1] * scaleY;
-    sInt dvdx = matrix[1][0] * scaleX;
-    sInt dvdy = matrix[1][1] * scaleY;
+    sInt dudx = matrix.get(0, 0) * scaleX;
+    sInt dudy = matrix.get(0, 1) * scaleY;
+    sInt dvdx = matrix.get(1, 0) * scaleX;
+    sInt dvdy = matrix.get(1, 1) * scaleY;
 
-    sInt u0 = matrix[0][3] * (1 << 24) + ((dudx + dudy) >> 1);
-    sInt v0 = matrix[1][3] * (1 << 24) + ((dvdx + dvdy) >> 1);
-    openktg::pixel *out = Data;
+    sInt u0 = matrix.get(0, 3) * (1 << 24) + ((dudx + dudy) >> 1);
+    sInt v0 = matrix.get(1, 3) * (1 << 24) + ((dvdx + dvdy) >> 1);
+    openktg::core::pixel *out = Data;
 
     for (sInt y = 0; y < YRes; y++)
     {
@@ -798,34 +523,34 @@ void GenTexture::ColorRemap(const GenTexture &inTex, const GenTexture &mapR, con
 
     for (sInt i = 0; i < NPixels; i++)
     {
-        const openktg::pixel &in = inTex.Data[i];
-        openktg::pixel &out = Data[i];
+        const openktg::core::pixel &in = inTex.Data[i];
+        openktg::core::pixel &out = Data[i];
 
         if (in.a() == 65535) // alpha==1, everything easy.
         {
-            openktg::pixel colR, colG, colB;
+            openktg::core::pixel colR, colG, colB;
 
             mapR.SampleGradient(colR, (in.r() << 8) + ((in.r() + 128) >> 8));
             mapG.SampleGradient(colG, (in.g() << 8) + ((in.g() + 128) >> 8));
             mapB.SampleGradient(colB, (in.b() << 8) + ((in.b() + 128) >> 8));
 
-            out = openktg::pixel(static_cast<openktg::red16_t>(sMin(colR.r() + colG.r() + colB.r(), 65535)),
-                                 static_cast<openktg::green16_t>(sMin(colR.g() + colG.g() + colB.g(), 65535)),
-                                 static_cast<openktg::blue16_t>(sMin(colR.b() + colG.b() + colB.b(), 65535)), static_cast<openktg::alpha16_t>(in.a()));
+            out = openktg::core::pixel(static_cast<openktg::red16_t>(sMin(colR.r() + colG.r() + colB.r(), 65535)),
+                                       static_cast<openktg::green16_t>(sMin(colR.g() + colG.g() + colB.g(), 65535)),
+                                       static_cast<openktg::blue16_t>(sMin(colR.b() + colG.b() + colB.b(), 65535)), static_cast<openktg::alpha16_t>(in.a()));
         }
         else if (in.a()) // alpha!=0
         {
-            openktg::pixel colR, colG, colB;
+            openktg::core::pixel colR, colG, colB;
             sU32 invA = (65535U << 16) / in.a();
 
             mapR.SampleGradient(colR, UMulShift8(sMin(in.r(), in.a()), invA));
             mapG.SampleGradient(colG, UMulShift8(sMin(in.g(), in.a()), invA));
             mapB.SampleGradient(colB, UMulShift8(sMin(in.b(), in.a()), invA));
 
-            out = openktg::pixel(static_cast<openktg::red16_t>(MulIntens(sMin(colR.r() + colG.r() + colB.r(), 65535), in.a())),
-                                 static_cast<openktg::green16_t>(MulIntens(sMin(colR.g() + colG.g() + colB.g(), 65535), in.a())),
-                                 static_cast<openktg::blue16_t>(MulIntens(sMin(colR.b() + colG.b() + colB.b(), 65535), in.a())),
-                                 static_cast<openktg::alpha16_t>(in.a()));
+            out = openktg::core::pixel(static_cast<openktg::red16_t>(MulIntens(sMin(colR.r() + colG.r() + colB.r(), 65535), in.a())),
+                                       static_cast<openktg::green16_t>(MulIntens(sMin(colR.g() + colG.g() + colB.g(), 65535), in.a())),
+                                       static_cast<openktg::blue16_t>(MulIntens(sMin(colR.b() + colG.b() + colB.b(), 65535), in.a())),
+                                       static_cast<openktg::alpha16_t>(in.a()));
         }
         else // alpha==0
             out = in;
@@ -836,8 +561,8 @@ void GenTexture::CoordRemap(const GenTexture &in, const GenTexture &remapTex, sF
 {
     assert(SizeMatchesWith(remapTex));
 
-    const openktg::pixel *remap = remapTex.Data;
-    openktg::pixel *out = Data;
+    const openktg::core::pixel *remap = remapTex.Data;
+    openktg::core::pixel *out = Data;
 
     sInt u0 = MinX;
     sInt v0 = MinY;
@@ -870,7 +595,7 @@ void GenTexture::Derive(const GenTexture &in, DeriveOp op, sF32 strength)
 {
     assert(SizeMatchesWith(in));
 
-    openktg::pixel *out = Data;
+    openktg::core::pixel *out = Data;
 
     for (sInt y = 0; y < YRes; y++)
     {
@@ -884,18 +609,18 @@ void GenTexture::Derive(const GenTexture &in, DeriveOp op, sF32 strength)
             switch (op)
             {
             case DeriveGradient: {
-                *out = openktg::pixel{static_cast<openktg::red16_t>(sClamp<sInt>(dx * 32768.0f + 32768.0f, 0, 65535)),
-                                      static_cast<openktg::green16_t>(sClamp<sInt>(dy * 32768.0f + 32768.0f, 0, 65535)), static_cast<openktg::blue16_t>(0),
-                                      static_cast<openktg::alpha16_t>(65535)};
+                *out = openktg::core::pixel{static_cast<openktg::red16_t>(sClamp<sInt>(dx * 32768.0f + 32768.0f, 0, 65535)),
+                                            static_cast<openktg::green16_t>(sClamp<sInt>(dy * 32768.0f + 32768.0f, 0, 65535)),
+                                            static_cast<openktg::blue16_t>(0), static_cast<openktg::alpha16_t>(65535)};
                 break;
             }
             case DeriveNormals: {
                 // (1 0 dx)^T x (0 1 dy)^T = (-dx -dy 1)
                 sF32 scale = 32768.0f * sFInvSqrt(1.0f + dx * dx + dy * dy);
 
-                *out = openktg::pixel{static_cast<openktg::red16_t>(sClamp<sInt>(-dx * scale + 32768.0f, 0, 65535)),
-                                      static_cast<openktg::green16_t>(sClamp<sInt>(-dy * scale + 32768.0f, 0, 65535)),
-                                      static_cast<openktg::blue16_t>(sClamp<sInt>(scale + 32768.0f, 0, 65535)), static_cast<openktg::alpha16_t>(65535)};
+                *out = openktg::core::pixel{static_cast<openktg::red16_t>(sClamp<sInt>(-dx * scale + 32768.0f, 0, 65535)),
+                                            static_cast<openktg::green16_t>(sClamp<sInt>(-dy * scale + 32768.0f, 0, 65535)),
+                                            static_cast<openktg::blue16_t>(sClamp<sInt>(scale + 32768.0f, 0, 65535)), static_cast<openktg::alpha16_t>(65535)};
                 break;
             }
             }
@@ -914,7 +639,7 @@ static sInt WrapCoord(sInt x, sInt width, sInt mode)
 }
 
 // Size is half of edge length in pixels, 26.6 fixed point
-static void Blur1DBuffer(openktg::pixel *dst, const openktg::pixel *src, sInt width, sInt sizeFixed, sInt wrapMode)
+static void Blur1DBuffer(openktg::core::pixel *dst, const openktg::core::pixel *src, sInt width, sInt sizeFixed, sInt wrapMode)
 {
     assert(sizeFixed > 32); // kernel should be wider than one pixel
     sInt frac = (sizeFixed - 32) & 63;
@@ -978,8 +703,8 @@ static void Blur1DBuffer(openktg::pixel *dst, const openktg::pixel *src, sInt wi
     for (sInt x = 0; x < width; x++)
     {
         // write out state of accumulator
-        dst[x] = openktg::pixel(static_cast<openktg::red16_t>(accu[0] / denom), static_cast<openktg::green16_t>(accu[1] / denom),
-                                static_cast<openktg::blue16_t>(accu[2] / denom), static_cast<openktg::alpha16_t>(accu[3] / denom));
+        dst[x] = openktg::core::pixel(static_cast<openktg::red16_t>(accu[0] / denom), static_cast<openktg::green16_t>(accu[1] / denom),
+                                      static_cast<openktg::blue16_t>(accu[2] / denom), static_cast<openktg::alpha16_t>(accu[3] / denom));
 
         // update accumulator
         sInt xl0 = WrapCoord(x - offset + 0, width, wrapMode);
@@ -1008,8 +733,8 @@ void GenTexture::Blur(const GenTexture &inImg, sF32 sizex, sF32 sizey, sInt orde
     {
         // allocate pixel buffers
         sInt bufSize = sMax(XRes, YRes);
-        openktg::pixel *buf1 = new openktg::pixel[bufSize];
-        openktg::pixel *buf2 = new openktg::pixel[bufSize];
+        openktg::core::pixel *buf1 = new openktg::core::pixel[bufSize];
+        openktg::core::pixel *buf2 = new openktg::core::pixel[bufSize];
         const GenTexture *in = &inImg;
 
         // horizontal blur
@@ -1019,7 +744,7 @@ void GenTexture::Blur(const GenTexture &inImg, sF32 sizex, sF32 sizey, sInt orde
             for (sInt y = 0; y < YRes; y++)
             {
                 // copy pixels into buffer 1
-                sCopyMem(buf1, &in->Data[y * XRes], XRes * sizeof(openktg::pixel));
+                sCopyMem(buf1, &in->Data[y * XRes], XRes * sizeof(openktg::core::pixel));
 
                 // blur order times, ping-ponging between buffers
                 for (sInt i = 0; i < order; i++)
@@ -1029,7 +754,7 @@ void GenTexture::Blur(const GenTexture &inImg, sF32 sizex, sF32 sizey, sInt orde
                 }
 
                 // copy pixels back
-                sCopyMem(&Data[y * XRes], buf1, XRes * sizeof(openktg::pixel));
+                sCopyMem(&Data[y * XRes], buf1, XRes * sizeof(openktg::core::pixel));
             }
 
             in = this;
@@ -1042,8 +767,8 @@ void GenTexture::Blur(const GenTexture &inImg, sF32 sizex, sF32 sizey, sInt orde
             for (sInt x = 0; x < XRes; x++)
             {
                 // copy pixels into buffer 1
-                const openktg::pixel *src = &in->Data[x];
-                openktg::pixel *dst = buf1;
+                const openktg::core::pixel *src = &in->Data[x];
+                openktg::core::pixel *dst = buf1;
 
                 for (sInt y = 0; y < YRes; y++)
                 {
@@ -1082,19 +807,15 @@ void GenTexture::Ternary(const GenTexture &in1Tex, const GenTexture &in2Tex, con
 
     for (sInt i = 0; i < NPixels; i++)
     {
-        openktg::pixel &out = Data[i];
-        const openktg::pixel &in1 = in1Tex.Data[i];
-        const openktg::pixel &in2 = in2Tex.Data[i];
-        const openktg::pixel &in3 = in3Tex.Data[i];
+        openktg::core::pixel &out = Data[i];
+        const openktg::core::pixel &in1 = in1Tex.Data[i];
+        const openktg::core::pixel &in2 = in2Tex.Data[i];
+        const openktg::core::pixel &in3 = in3Tex.Data[i];
 
         switch (op)
         {
         case TernaryLerp:
             out = (~in3.r() * in1) + (in3.r() * in2);
-            // out.r = MulIntens(65535 - in3.r, in1.r) + MulIntens(in3.r, in2.r);
-            // out.g = MulIntens(65535 - in3.r, in1.g) + MulIntens(in3.r, in2.g);
-            // out.b = MulIntens(65535 - in3.r, in1.b) + MulIntens(in3.r, in2.b);
-            // out.a = MulIntens(65535 - in3.r, in1.a) + MulIntens(in3.r, in2.a);
             break;
 
         case TernarySelect:
@@ -1135,7 +856,7 @@ void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 or
 
     for (sInt y = minY; y <= maxY; y++)
     {
-        openktg::pixel *out = &Data[y * XRes + minX];
+        openktg::core::pixel *out = &Data[y * XRes + minX];
         sInt u = u0;
         sInt v = v0;
 
@@ -1143,7 +864,7 @@ void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 or
         {
             if (u >= 0 && u < 0x1000000 && v >= 0 && v < 0x1000000)
             {
-                openktg::pixel in;
+                openktg::core::pixel in;
                 sInt transIn, transOut;
 
                 inTex.SampleFiltered(in, u, v, ClampU | ClampV | ((mode & 1) ? FilterBilinear : FilterNearest));
@@ -1152,114 +873,62 @@ void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 or
                 {
                 case CombineAdd: {
                     *out += in;
-                    // out->r = sMin(out->r + in.r, 65535);
-                    // out->g = sMin(out->g + in.g, 65535);
-                    // out->b = sMin(out->b + in.b, 65535);
-                    // out->a = sMin(out->a + in.a, 65535);
                     break;
                 }
 
                 case CombineSub: {
                     *out -= in;
-                    // out->r = sMax<sInt>(out->r - in.r, 0);
-                    // out->g = sMax<sInt>(out->g - in.g, 0);
-                    // out->b = sMax<sInt>(out->b - in.b, 0);
-                    // out->a = sMax<sInt>(out->a - in.a, 0);
                     break;
                 }
 
                 case CombineMulC: {
                     *out *= in;
-                    //    out->r = MulIntens(out->r, in.r);
-                    //     out->g = MulIntens(out->g, in.g);
-                    //     out->b = MulIntens(out->b, in.b);
-                    //     out->a = MulIntens(out->a, in.a);
                     break;
                 }
 
                 case CombineMin: {
                     *out &= in;
-                    // out->r = sMin(out->r, in.r);
-                    // out->g = sMin(out->g, in.g);
-                    // out->b = sMin(out->b, in.b);
-                    // out->a = sMin(out->a, in.a);
                     break;
                 }
 
                 case CombineMax: {
                     *out |= in;
-                    // out->r = sMax(out->r, in.r);
-                    // out->g = sMax(out->g, in.g);
-                    // out->b = sMax(out->b, in.b);
-                    // out->a = sMax(out->a, in.a);
                     break;
                 }
 
                 case CombineSetAlpha: {
                     out->set_alpha(static_cast<openktg::alpha16_t>(in.r()));
-                    // out->a = in.r;
                     break;
                 }
 
                 case CombinePreAlpha: {
                     *out = *out * in.r();
                     out->set_alpha(static_cast<openktg::alpha16_t>(in.g()));
-                    // out->r = MulIntens(out->r, in.r);
-                    // out->g = MulIntens(out->g, in.r);
-                    // out->b = MulIntens(out->b, in.r);
-                    // out->a = in.g;
                     break;
                 }
 
                 case CombineOver: {
                     *out = openktg::combineOver(in, *out);
-                    // transIn = 65535 - in.a;
-
-                    // out->r = MulIntens(transIn, out->r) + in.r;
-                    // out->g = MulIntens(transIn, out->g) + in.g;
-                    // out->b = MulIntens(transIn, out->b) + in.b;
-                    // out->a += MulIntens(in.a, 65535 - out->a);
                     break;
                 }
 
                 case CombineMultiply: {
                     *out = openktg::combineMultiply(in, *out);
-
-                    // out->r = MulIntens(transIn, out->r) + MulIntens(transOut, in.r) + MulIntens(in.r, out->r);
-                    // out->g = MulIntens(transIn, out->g) + MulIntens(transOut, in.g) + MulIntens(in.g, out->g);
-                    // out->b = MulIntens(transIn, out->b) + MulIntens(transOut, in.b) + MulIntens(in.b, out->b);
-                    // out->a += MulIntens(in.a, transOut);
                     break;
                 }
 
                 case CombineScreen: {
                     *out = openktg::combineScreen(in, *out);
-                    // out->r += MulIntens(in.r, 65535 - out->r);
-                    // out->g += MulIntens(in.g, 65535 - out->g);
-                    // out->b += MulIntens(in.b, 65535 - out->b);
-                    // out->a += MulIntens(in.a, 65535 - out->a);
                     break;
                 }
 
                 case CombineDarken: {
                     *out = openktg::combineDarken(in, *out);
-
-                    // out->r += in.r - sMax(MulIntens(in.r, out->a), MulIntens(out->r, in.a));
-                    // out->g += in.g - sMax(MulIntens(in.g, out->a), MulIntens(out->g, in.a));
-                    // out->b += in.b - sMax(MulIntens(in.b, out->a), MulIntens(out->b, in.a));
-                    // out->a += MulIntens(in.a, 65535 - out->a);
                     break;
                 }
 
                 case CombineLighten: {
-                    const auto new_alpha = out->a() + openktg::utility::mul_intens(in.a(), ~(out->a()));
-
                     *out = openktg::combineLighten(in, *out);
-
-                    // out->r += in.r - sMin(MulIntens(in.r, out->a), MulIntens(out->r, in.a));
-                    // out->g += in.g - sMin(MulIntens(in.g, out->a), MulIntens(out->g, in.a));
-                    // out->b += in.b - sMin(MulIntens(in.b, out->a), MulIntens(out->b, in.a));
-                    // out->a += MulIntens(in.a, 65535 - out->a);
                     break;
                 }
                 }
@@ -1276,7 +945,7 @@ void GenTexture::Paste(const GenTexture &bgTex, const GenTexture &inTex, sF32 or
 }
 
 void GenTexture::Bump(const GenTexture &surface, const GenTexture &normals, const GenTexture *specular, const GenTexture *falloffMap, sF32 px, sF32 py, sF32 pz,
-                      sF32 dx, sF32 dy, sF32 dz, const openktg::pixel &ambient, const openktg::pixel &diffuse, sBool directional)
+                      sF32 dx, sF32 dy, sF32 dz, const openktg::core::pixel &ambient, const openktg::core::pixel &diffuse, sBool directional)
 {
     assert(SizeMatchesWith(surface) && SizeMatchesWith(normals));
 
@@ -1302,9 +971,9 @@ void GenTexture::Bump(const GenTexture &surface, const GenTexture &normals, cons
 
     invX = 1.0f / XRes;
     invY = 1.0f / YRes;
-    openktg::pixel *out = Data;
-    const openktg::pixel *surf = surface.Data;
-    const openktg::pixel *normal = normals.Data;
+    openktg::core::pixel *out = Data;
+    const openktg::core::pixel *surf = surface.Data;
+    const openktg::core::pixel *normal = normals.Data;
 
     for (sInt y = 0; y < YRes; y++)
     {
@@ -1339,7 +1008,7 @@ void GenTexture::Bump(const GenTexture &surface, const GenTexture &normals, cons
             N[2] = (normal->b() - 0x8000) / 32768.0f;
 
             // get falloff term if specified
-            openktg::pixel falloff;
+            openktg::core::pixel falloff;
             if (falloffMap)
             {
                 sF32 spotTerm = sMax<sF32>(dx * L[0] + dy * L[1] + dz * L[2], 0.0f);
@@ -1348,14 +1017,9 @@ void GenTexture::Bump(const GenTexture &surface, const GenTexture &normals, cons
 
             // lighting calculation
             sF32 NdotL = sMax<sF32>(N[0] * L[0] + N[1] * L[1] + N[2] * L[2], 0.0f);
-            // openktg::pixel ambDiffuse = diffuse * NdotL;
-            openktg::pixel ambDiffuse =
-                openktg::pixel{static_cast<openktg::red16_t>(NdotL * diffuse.r()), static_cast<openktg::green16_t>(NdotL * diffuse.g()),
-                               static_cast<openktg::blue16_t>(NdotL * diffuse.b()), static_cast<openktg::alpha16_t>(NdotL * diffuse.a())};
-            // ambDiffuse.r = NdotL * diffuse.r;
-            // ambDiffuse.g = NdotL * diffuse.g;
-            // ambDiffuse.b = NdotL * diffuse.b;
-            // ambDiffuse.a = NdotL * diffuse.a;
+            openktg::core::pixel ambDiffuse =
+                openktg::core::pixel{static_cast<openktg::red16_t>(NdotL * diffuse.r()), static_cast<openktg::green16_t>(NdotL * diffuse.g()),
+                                     static_cast<openktg::blue16_t>(NdotL * diffuse.b()), static_cast<openktg::alpha16_t>(NdotL * diffuse.a())};
             if (falloffMap)
             {
                 ambDiffuse = openktg::compositeMulC(ambDiffuse, falloff);
@@ -1363,14 +1027,10 @@ void GenTexture::Bump(const GenTexture &surface, const GenTexture &normals, cons
 
             ambDiffuse = openktg::compositeAdd(ambDiffuse, ambient);
             *out = *surf * ambDiffuse;
-            // out->r = MulIntens(surf->r, ambDiffuse.r);
-            // out->g = MulIntens(surf->g, ambDiffuse.g);
-            // out->b = MulIntens(surf->b, ambDiffuse.b);
-            // out->a = MulIntens(surf->a, ambDiffuse.a);
 
             if (specular)
             {
-                openktg::pixel addTerm;
+                openktg::core::pixel addTerm;
                 sF32 NdotH = sMax<sF32>(N[0] * H[0] + N[1] * H[1] + N[2] * H[2], 0.0f);
                 specular->SampleGradient(addTerm, NdotH * (1 << 24));
                 if (falloffMap)
@@ -1382,9 +1042,6 @@ void GenTexture::Bump(const GenTexture &surface, const GenTexture &normals, cons
                 *out += addTerm;
                 out->set_alpha(static_cast<openktg::alpha16_t>(new_alpha));
                 out->clamp_premult();
-                // out->r = sClamp<sInt>(out->r + addTerm.r, 0, out->a);
-                // out->g = sClamp<sInt>(out->g + addTerm.g, 0, out->a);
-                // out->b = sClamp<sInt>(out->b + addTerm.b, 0, out->a);
             }
 
             out++;
@@ -1394,7 +1051,7 @@ void GenTexture::Bump(const GenTexture &surface, const GenTexture &normals, cons
     }
 }
 
-void GenTexture::LinearCombine(const openktg::pixel &color, sF32 constWeight, const LinearInput *inputs, sInt nInputs)
+void GenTexture::LinearCombine(const openktg::core::pixel &color, sF32 constWeight, const LinearInput *inputs, sInt nInputs)
 {
     sInt w[256], uo[256], vo[256];
 
@@ -1427,7 +1084,7 @@ void GenTexture::LinearCombine(const openktg::pixel &color, sF32 constWeight, co
     sInt v0 = MinY;
     sInt stepU = 1 << (24 - ShiftX);
     sInt stepV = 1 << (24 - ShiftY);
-    openktg::pixel *out = Data;
+    openktg::core::pixel *out = Data;
 
     for (sInt y = 0; y < YRes; y++)
     {
@@ -1448,7 +1105,7 @@ void GenTexture::LinearCombine(const openktg::pixel &color, sF32 constWeight, co
             for (sInt j = 0; j < nInputs; j++)
             {
                 const LinearInput &in = inputs[j];
-                openktg::pixel inPix;
+                openktg::core::pixel inPix;
 
                 in.Tex->SampleFiltered(inPix, u + uo[j], v + vo[j], in.FilterMode);
 
@@ -1459,16 +1116,12 @@ void GenTexture::LinearCombine(const openktg::pixel &color, sF32 constWeight, co
             }
 
             // store (with clamping)
-            *out = openktg::pixel{
+            *out = openktg::core::pixel{
                 static_cast<openktg::red16_t>(sClamp(acc_r, 0, 65535)),
                 static_cast<openktg::green16_t>(sClamp(acc_g, 0, 65535)),
                 static_cast<openktg::blue16_t>(sClamp(acc_b, 0, 65535)),
                 static_cast<openktg::alpha16_t>(sClamp(acc_a, 0, 65535)),
             };
-            // out->r = sClamp(acc_r, 0, 65535);
-            // out->g = sClamp(acc_g, 0, 65535);
-            // out->b = sClamp(acc_b, 0, 65535);
-            // out->a = sClamp(acc_a, 0, 65535);
 
             // advance to next pixel
             u += stepU;
@@ -1481,5 +1134,5 @@ void GenTexture::LinearCombine(const openktg::pixel &color, sF32 constWeight, co
 
 void InitTexgen()
 {
-    InitPerlin();
+    // PerlinNoise::initializeTable();
 }

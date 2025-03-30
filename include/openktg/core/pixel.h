@@ -1,10 +1,10 @@
 #pragma once
 
-#include <openktg/utility.h>
+#include <openktg/util/utility.h>
 
 #include <cstdint>
 
-namespace openktg
+namespace openktg::inline core
 {
 // 8 bit channels
 enum struct red8_t : std::uint8_t
@@ -173,4 +173,4 @@ auto combineMultiply(pixel lhs, pixel rhs) -> pixel;
 auto combineScreen(pixel lhs, pixel rhs) -> pixel;
 auto combineDarken(pixel lhs, pixel rhs) -> pixel;
 auto combineLighten(pixel lhs, pixel rhs) -> pixel;
-} // namespace openktg
+} // namespace openktg::inline core

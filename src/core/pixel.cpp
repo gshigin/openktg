@@ -1,14 +1,16 @@
 #include <utility>
 
-#include <openktg/pixel.h>
-#include <openktg/types.h>
-#include <openktg/utility.h>
+#include <openktg/core/pixel.h>
+#include <openktg/core/types.h>
+#include <openktg/util/utility.h>
 
 namespace openktg
 {
+inline namespace core
+{
 pixel::pixel(red8_t r, green8_t g, blue8_t b, alpha8_t a)
-    : r_(utility::expand8to16(std::to_underlying(r))), g_(utility::expand8to16(std::to_underlying(g))), b_(utility::expand8to16(std::to_underlying(b))),
-      a_(utility::expand8to16(std::to_underlying(a)))
+    : r_(util::expand8to16(std::to_underlying(r))), g_(util::expand8to16(std::to_underlying(g))), b_(util::expand8to16(std::to_underlying(b))),
+      a_(util::expand8to16(std::to_underlying(a)))
 {
 }
 
@@ -26,10 +28,10 @@ pixel::pixel(color32_t argb)
     const std::uint8_t bv = (val >> 0) & 0xFF;
     const std::uint8_t av = (val >> 24) & 0xFF;
 
-    a_ = utility::expand8to16(av);
-    r_ = utility::mul_intens(utility::expand8to16(rv), a_);
-    g_ = utility::mul_intens(utility::expand8to16(gv), a_);
-    b_ = utility::mul_intens(utility::expand8to16(bv), a_);
+    a_ = util::expand8to16(av);
+    r_ = util::mul_intens(util::expand8to16(rv), a_);
+    g_ = util::mul_intens(util::expand8to16(gv), a_);
+    b_ = util::mul_intens(util::expand8to16(bv), a_);
 }
 
 pixel::pixel(color64_t argb64)
@@ -63,20 +65,20 @@ auto pixel::operator-=(pixel other) -> pixel &
 
 auto pixel::operator*=(pixel other) -> pixel &
 {
-    r_ = utility::mul_intens(r_, other.r_);
-    g_ = utility::mul_intens(g_, other.g_);
-    b_ = utility::mul_intens(b_, other.b_);
-    a_ = utility::mul_intens(a_, other.a_);
+    r_ = util::mul_intens(r_, other.r_);
+    g_ = util::mul_intens(g_, other.g_);
+    b_ = util::mul_intens(b_, other.b_);
+    a_ = util::mul_intens(a_, other.a_);
 
     return *this;
 }
 
 auto pixel::operator*=(std::uint16_t scalar) -> pixel &
 {
-    r_ = utility::mul_intens(r_, scalar);
-    g_ = utility::mul_intens(g_, scalar);
-    b_ = utility::mul_intens(b_, scalar);
-    a_ = utility::mul_intens(a_, scalar);
+    r_ = util::mul_intens(r_, scalar);
+    g_ = util::mul_intens(g_, scalar);
+    b_ = util::mul_intens(b_, scalar);
+    a_ = util::mul_intens(a_, scalar);
 
     return *this;
 }
@@ -113,10 +115,10 @@ auto pixel::operator==(pixel other) const -> bool
 
 auto pixel::lerp(pixel other, std::uint32_t t) -> pixel &
 {
-    r_ = utility::lerp(r_, other.r_, t);
-    g_ = utility::lerp(g_, other.g_, t);
-    b_ = utility::lerp(b_, other.b_, t);
-    a_ = utility::lerp(a_, other.a_, t);
+    r_ = util::lerp(r_, other.r_, t);
+    g_ = util::lerp(g_, other.g_, t);
+    b_ = util::lerp(b_, other.b_, t);
+    a_ = util::lerp(a_, other.a_, t);
 
     return *this;
 }
@@ -212,7 +214,7 @@ auto combineOver(pixel lhs, pixel rhs) -> pixel
 }
 auto combineMultiply(pixel lhs, pixel rhs) -> pixel
 {
-    return ((lhs * rhs) + (~lhs.a() * rhs) + (~rhs.a() * lhs)).set_alpha(static_cast<alpha16_t>(lhs.a() + rhs.a() - utility::mul_intens(lhs.a(), rhs.a())));
+    return ((lhs * rhs) + (~lhs.a() * rhs) + (~rhs.a() * lhs)).set_alpha(static_cast<alpha16_t>(lhs.a() + rhs.a() - util::mul_intens(lhs.a(), rhs.a())));
 }
 auto combineScreen(pixel lhs, pixel rhs) -> pixel
 {
@@ -220,12 +222,11 @@ auto combineScreen(pixel lhs, pixel rhs) -> pixel
 }
 auto combineDarken(pixel lhs, pixel rhs) -> pixel
 {
-    return ((lhs | rhs) - ((lhs * rhs.a()) | (lhs.a() * rhs)) + (lhs & rhs))
-        .set_alpha(static_cast<alpha16_t>(rhs.a() + utility::mul_intens(lhs.a(), ~rhs.a())));
+    return ((lhs | rhs) - ((lhs * rhs.a()) | (lhs.a() * rhs)) + (lhs & rhs)).set_alpha(static_cast<alpha16_t>(rhs.a() + util::mul_intens(lhs.a(), ~rhs.a())));
 }
 auto combineLighten(pixel lhs, pixel rhs) -> pixel
 {
-    return ((lhs & rhs) - ((lhs * rhs.a()) & (lhs.a() * rhs)) + (lhs | rhs))
-        .set_alpha(static_cast<alpha16_t>(rhs.a() + utility::mul_intens(lhs.a(), ~rhs.a())));
+    return ((lhs & rhs) - ((lhs * rhs.a()) & (lhs.a() * rhs)) + (lhs | rhs)).set_alpha(static_cast<alpha16_t>(rhs.a() + util::mul_intens(lhs.a(), ~rhs.a())));
 }
+} // namespace core
 } // namespace openktg

@@ -4,13 +4,11 @@
 /***   I hereby place this code in the public domain.                     ***/
 /***                                                                      ***/
 /****************************************************************************/
+#pragma once
 
-#ifndef __TP_GENTEXTURE_HPP_
-#define __TP_GENTEXTURE_HPP_
-
-#include <openktg/matrix.h>
-#include <openktg/pixel.h>
-#include <openktg/types.h>
+#include <openktg/core/matrix.h>
+#include <openktg/core/pixel.h>
+#include <openktg/core/types.h>
 
 // CellCenter. 2D pair of coordinates plus a cell color.
 struct CellCenter
@@ -59,10 +57,10 @@ struct GenTexture
     [[nodiscard]] auto SizeMatchesWith(const GenTexture &x) const -> sBool;
 
     // Sampling helpers with filtering (coords are 1.7.24 fixed point)
-    void SampleNearest(openktg::pixel &result, sInt x, sInt y, sInt wrapMode) const;
-    void SampleBilinear(openktg::pixel &result, sInt x, sInt y, sInt wrapMode) const;
-    void SampleFiltered(openktg::pixel &result, sInt x, sInt y, sInt filterMode) const;
-    void SampleGradient(openktg::pixel &result, sInt x) const;
+    void SampleNearest(openktg::core::pixel &result, sInt x, sInt y, sInt wrapMode) const;
+    void SampleBilinear(openktg::core::pixel &result, sInt x, sInt y, sInt wrapMode) const;
+    void SampleFiltered(openktg::core::pixel &result, sInt x, sInt y, sInt filterMode) const;
+    void SampleGradient(openktg::core::pixel &result, sInt x) const;
 
     // Ternary operations
     enum TernaryOp
@@ -136,8 +134,8 @@ struct GenTexture
     void Cells(const GenTexture &grad, const CellCenter *centers, sInt nCenters, sF32 amp, sInt mode);
 
     // Filters
-    void ColorMatrixTransform(const GenTexture &in, const Matrix44 &matrix, sBool clampPremult);
-    void CoordMatrixTransform(const GenTexture &in, const Matrix44 &matrix, sInt filterMode);
+    void ColorMatrixTransform(const GenTexture &in, const openktg::matrix44<float> &matrix, sBool clampPremult);
+    void CoordMatrixTransform(const GenTexture &in, const openktg::matrix44<float> &matrix, sInt filterMode);
     void ColorRemap(const GenTexture &in, const GenTexture &mapR, const GenTexture &mapG, const GenTexture &mapB);
     void CoordRemap(const GenTexture &in, const GenTexture &remap, sF32 strengthU, sF32 strengthV, sInt filterMode);
     void Derive(const GenTexture &in, DeriveOp op, sF32 strength);
@@ -153,5 +151,3 @@ struct GenTexture
 
 // Initialize the generator
 void InitTexgen();
-
-#endif // __TP_GENTEXTURE_HPP_

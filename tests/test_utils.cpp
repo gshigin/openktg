@@ -1,8 +1,9 @@
-#include <openktg/types.h>
-#include <openktg/utility.h>
-
 #include <gtest/gtest.h>
+
 #include <random>
+
+#include <openktg/core/types.h>
+#include <openktg/util/utility.h>
 
 using namespace openktg;
 namespace
@@ -42,8 +43,8 @@ TEST(UtilsTest, LerpRange)
                 auto a = static_cast<std::uint16_t>(j * 1024 + 3);
                 auto b = static_cast<std::uint16_t>(k * 1024 - 7);
 
-                EXPECT_EQ(static_cast<std::uint16_t>(legacy::Lerp(t, a, b)), utility::lerp(a, b, t));
-                EXPECT_EQ(utility::lerp(b, a, 0x10000 - t), utility::lerp(a, b, t));
+                EXPECT_EQ(static_cast<std::uint16_t>(legacy::Lerp(t, a, b)), util::lerp(a, b, t));
+                EXPECT_EQ(util::lerp(b, a, 0x10000 - t), util::lerp(a, b, t));
             }
         }
     }
@@ -56,8 +57,8 @@ TEST(UtilsTest, LerpRandom)
         std::uint32_t t = random_uint16(0, 65536);
         std::uint16_t a = random_uint16(0, 65535);
         std::uint16_t b = random_uint16(0, 65535);
-        EXPECT_EQ(static_cast<std::uint16_t>(legacy::Lerp(t, a, b)), utility::lerp(a, b, t));
-        EXPECT_EQ(utility::lerp(b, a, 0x10000 - t), utility::lerp(a, b, t));
+        EXPECT_EQ(static_cast<std::uint16_t>(legacy::Lerp(t, a, b)), util::lerp(a, b, t));
+        EXPECT_EQ(util::lerp(b, a, 0x10000 - t), util::lerp(a, b, t));
     }
 }
 
@@ -72,8 +73,8 @@ TEST(UtilsTest, MulIntensRange)
                 auto a = static_cast<std::uint16_t>(j * 1024 - 11);
                 auto b = static_cast<std::uint16_t>(k * 1024 + 7);
 
-                EXPECT_EQ(static_cast<std::uint16_t>(legacy::MulIntens(a, b)), utility::mul_intens(a, b));
-                EXPECT_EQ(utility::mul_intens(a, b), utility::mul_intens(b, a));
+                EXPECT_EQ(static_cast<std::uint16_t>(legacy::MulIntens(a, b)), util::mul_intens(a, b));
+                EXPECT_EQ(util::mul_intens(a, b), util::mul_intens(b, a));
             }
         }
     }
@@ -85,7 +86,7 @@ TEST(UtilsTest, MulIntensRandom)
     {
         std::uint16_t a = random_uint16(0, 65535);
         std::uint16_t b = random_uint16(0, 65535);
-        EXPECT_EQ(static_cast<std::uint16_t>(legacy::MulIntens(a, b)), utility::mul_intens(a, b));
-        EXPECT_EQ(utility::mul_intens(a, b), utility::mul_intens(b, a));
+        EXPECT_EQ(static_cast<std::uint16_t>(legacy::MulIntens(a, b)), util::mul_intens(a, b));
+        EXPECT_EQ(util::mul_intens(a, b), util::mul_intens(b, a));
     }
 }
