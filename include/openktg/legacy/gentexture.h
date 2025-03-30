@@ -6,9 +6,9 @@
 /****************************************************************************/
 #pragma once
 
-#include <openktg/matrix.h>
-#include <openktg/pixel.h>
-#include <openktg/types.h>
+#include <openktg/core/matrix.h>
+#include <openktg/core/pixel.h>
+#include <openktg/core/types.h>
 
 // CellCenter. 2D pair of coordinates plus a cell color.
 struct CellCenter
@@ -57,10 +57,10 @@ struct GenTexture
     [[nodiscard]] auto SizeMatchesWith(const GenTexture &x) const -> sBool;
 
     // Sampling helpers with filtering (coords are 1.7.24 fixed point)
-    void SampleNearest(openktg::pixel &result, sInt x, sInt y, sInt wrapMode) const;
-    void SampleBilinear(openktg::pixel &result, sInt x, sInt y, sInt wrapMode) const;
-    void SampleFiltered(openktg::pixel &result, sInt x, sInt y, sInt filterMode) const;
-    void SampleGradient(openktg::pixel &result, sInt x) const;
+    void SampleNearest(openktg::core::pixel &result, sInt x, sInt y, sInt wrapMode) const;
+    void SampleBilinear(openktg::core::pixel &result, sInt x, sInt y, sInt wrapMode) const;
+    void SampleFiltered(openktg::core::pixel &result, sInt x, sInt y, sInt filterMode) const;
+    void SampleGradient(openktg::core::pixel &result, sInt x) const;
 
     // Ternary operations
     enum TernaryOp
@@ -145,8 +145,8 @@ struct GenTexture
     void Ternary(const GenTexture &in1, const GenTexture &in2, const GenTexture &in3, TernaryOp op);
     void Paste(const GenTexture &background, const GenTexture &snippet, sF32 orgx, sF32 orgy, sF32 ux, sF32 uy, sF32 vx, sF32 vy, CombineOp op, sInt mode);
     void Bump(const GenTexture &surface, const GenTexture &normals, const GenTexture *specular, const GenTexture *falloff, sF32 px, sF32 py, sF32 pz, sF32 dx,
-              sF32 dy, sF32 dz, const openktg::pixel &ambient, const openktg::pixel &diffuse, sBool directional);
-    void LinearCombine(const openktg::pixel &color, sF32 constWeight, const LinearInput *inputs, sInt nInputs);
+              sF32 dy, sF32 dz, const openktg::core::pixel &ambient, const openktg::core::pixel &diffuse, sBool directional);
+    void LinearCombine(const openktg::core::pixel &color, sF32 constWeight, const LinearInput *inputs, sInt nInputs);
 };
 
 // Initialize the generator

@@ -5,8 +5,8 @@
 #include <cstdint>
 #include <numeric>
 
-#include <openktg/random.h>
-#include <openktg/utility.h>
+#include <openktg/util/random.h>
+#include <openktg/util/utility.h>
 
 struct PerlinNoise
 {
@@ -68,7 +68,7 @@ struct PerlinNoise
         const float p01 = (P(px0 + Ppy1 + seed) / 2047.5f) - 1.0f;
         const float p11 = (P(px1 + Ppy1 + seed) / 2047.5f) - 1.0f;
 
-        return openktg::utility::lerp(openktg::utility::lerp(p00, p10, u), openktg::utility::lerp(p01, p11, u), v);
+        return openktg::util::lerp(openktg::util::lerp(p00, p10, u), openktg::util::lerp(p01, p11, u), v);
     }
 
     static constexpr auto SmoothStep(float x) -> float

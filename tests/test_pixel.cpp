@@ -1,15 +1,14 @@
-#include "gtest/gtest.h"
-#include <openktg/pixel.h>
-#include <openktg/types.h>
-#include <openktg/utility.h>
-
 #include <gtest/gtest.h>
 
 #include <cstdint>
 #include <random>
 
+#include <openktg/core/pixel.h>
+#include <openktg/core/types.h>
+#include <openktg/util/utility.h>
+
 using namespace openktg;
-namespace ut = utility;
+namespace ut = util;
 
 namespace
 {

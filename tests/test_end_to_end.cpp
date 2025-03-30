@@ -1,14 +1,15 @@
-#include "openktg/matrix.h"
+
 #include <gtest/gtest.h>
 
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 
-#include <openktg/gentexture.h>
-#include <openktg/pixel.h>
-#include <openktg/procedural.h>
-#include <openktg/types.h>
+#include <openktg/core/matrix.h>
+#include <openktg/core/pixel.h>
+#include <openktg/core/types.h>
+#include <openktg/legacy/gentexture.h>
+#include <openktg/texture/procedural.h>
 
 auto ReadImage(GenTexture &img, const char *filename) -> bool
 {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <openktg/macro.h>
+#include <openktg/util/macro.h>
 
 #include <algorithm>
 #include <bit>
@@ -8,7 +8,7 @@
 #include <concepts>
 #include <cstdint>
 
-namespace openktg::utility
+namespace openktg::util
 {
 // Expands 8bit value to 16bit by concating value twice
 OKTG(always_inline) constexpr auto expand8to16(std::uint8_t x) noexcept -> std::uint16_t
@@ -69,4 +69,4 @@ OKTG(always_inline) auto unsigned_mul_shift_8(std::uint32_t a, std::uint32_t b) 
 {
     return (static_cast<std::uint64_t>(a) * static_cast<std::uint64_t>(b) + 0x80) >> 8;
 }
-} // namespace openktg::utility
+} // namespace openktg::util

@@ -1,13 +1,13 @@
 #pragma once
 
-#include "openktg/matrix.h"
 #include <cassert>
 #include <random>
 
-#include <openktg/gentexture.h>
-#include <openktg/pixel.h>
-#include <openktg/random.h>
-#include <openktg/types.h>
+#include <openktg/core/matrix.h>
+#include <openktg/core/pixel.h>
+#include <openktg/core/types.h>
+#include <openktg/legacy/gentexture.h>
+#include <openktg/util/random.h>
 
 // Create a simple linear gradient texture
 // Input colors are 0xaarrggbb (not premultiplied!)

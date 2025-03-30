@@ -20,8 +20,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
 
 add_library(${PROJECT_NAME} 
-    src/gentexture.cpp
-    src/pixel.cpp
+    src/legacy/gentexture.cpp
+    src/core/pixel.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

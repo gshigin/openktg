@@ -1,14 +1,15 @@
 #pragma once
 
 #include <array>
-
-#include <concepts>
-#include <openktg/pixel.h>
-#include <openktg/types.h>
 #include <type_traits>
 
-namespace openktg
+#include <openktg/core/pixel.h>
+#include <openktg/core/types.h>
+
+namespace openktg::inline core
 {
+
+// Simple 4x4 matrix type
 template <typename T>
     requires std::is_arithmetic_v<T>
 struct matrix44
@@ -24,10 +25,6 @@ struct matrix44
         return data[4 * i + j];
     }
 };
-} // namespace openktg
-
-// Simple 4x4 matrix type
-using Matrix44 = sF32[4][4];
 
 // 4x4 matrix multiply
 static void MatMult(openktg::matrix44<float> &dest, const openktg::matrix44<float> &a, const openktg::matrix44<float> &b)
@@ -68,3 +65,4 @@ static void MatRotateZ(openktg::matrix44<float> &dest, sF32 angle)
     dest.get(1, 0) = -s;
     dest.get(1, 1) = c;
 }
+} // namespace openktg::inline core

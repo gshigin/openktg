@@ -5,10 +5,10 @@
 /***                                                                      ***/
 /****************************************************************************/
 
-#include "openktg/matrix.h"
-#include "openktg/pixel.h"
-#include <openktg/gentexture.h>
-#include <openktg/procedural.h>
+#include <openktg/core/matrix.h>
+#include <openktg/core/pixel.h>
+#include <openktg/legacy/gentexture.h>
+#include <openktg/texture/procedural.h>
 
 #include <array>
 #include <cassert>
