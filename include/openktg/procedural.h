@@ -1,9 +1,11 @@
 #pragma once
 
 #include <cassert>
+#include <random>
 
 #include <openktg/gentexture.h>
 #include <openktg/pixel.h>
+#include <openktg/random.h>
 #include <openktg/types.h>
 
 // Create a simple linear gradient texture
@@ -20,19 +22,21 @@ static auto LinearGradient(sU32 startCol, sU32 endCol) -> GenTexture
 }
 
 // Create a pattern of randomly colored voronoi cells
-static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensity, sInt maxCount, sF32 minDist)
+static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensity, sInt maxCount, sF32 minDist, sInt seed = 0x339195BCC564A1E3)
 {
-    srand(0);
     assert(maxCount <= 256);
     CellCenter centers[256];
+
+    openktg::random::xoshiro128ss rng{openktg::random::seed(seed), openktg::random::seed(openktg::random::seed(seed))};
+    std::uniform_real_distribution<float> distr(0.0f, 1.0f);
 
     // generate random center points
     for (sInt i = 0; i < maxCount; i++)
     {
-        int intens = (1.0f * rand() * intensity) / RAND_MAX;
+        int intens = intensity * distr(rng);
 
-        centers[i].x = 1.0f * rand() / RAND_MAX;
-        centers[i].y = 1.0f * rand() / RAND_MAX;
+        centers[i].x = distr(rng);
+        centers[i].y = distr(rng);
         centers[i].color = {static_cast<openktg::red8_t>(intens), static_cast<openktg::green8_t>(intens), static_cast<openktg::blue8_t>(intens),
                             static_cast<openktg::alpha8_t>(255)};
     }

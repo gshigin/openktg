@@ -102,10 +102,6 @@ auto ReadImage(GenTexture &img, const char *filename) -> bool
                                   static_cast<openktg::green16_t>((lineBuf[x * 4 + 1] << 8) | lineBuf[x * 4 + 1]),
                                   static_cast<openktg::blue16_t>((lineBuf[x * 4 + 2] << 8) | lineBuf[x * 4 + 2]),
                                   static_cast<openktg::alpha16_t>((lineBuf[x * 4 + 3] << 8) | lineBuf[x * 4 + 3])};
-            // out->b = (lineBuf[x * 4 + 0] << 8) | lineBuf[x * 4 + 0];
-            // out->g = (lineBuf[x * 4 + 1] << 8) | lineBuf[x * 4 + 1];
-            // out->r = (lineBuf[x * 4 + 2] << 8) | lineBuf[x * 4 + 2];
-            // out->a = (lineBuf[x * 4 + 3] << 8) | lineBuf[x * 4 + 3];
             ++out;
         }
     }
