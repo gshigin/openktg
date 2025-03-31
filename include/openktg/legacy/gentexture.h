@@ -7,8 +7,14 @@
 #pragma once
 
 #include <openktg/core/matrix.h>
-#include <openktg/core/pixel.h>
 #include <openktg/core/types.h>
+
+// fwd
+namespace openktg::inline core
+{
+struct pixel;
+template struct matrix44<float>;
+} // namespace openktg::inline core
 
 // CellCenter. 2D pair of coordinates plus a cell color.
 struct CellCenter
@@ -33,6 +39,49 @@ struct LinearInput
 
 struct GenTexture
 {
+    [[nodiscard]] std::uint32_t shift_x() const noexcept
+    {
+        return ShiftX;
+    }
+    [[nodiscard]] std::uint32_t shift_y() const noexcept
+    {
+        return ShiftY;
+    }
+    [[nodiscard]] std::uint32_t min_x() const noexcept
+    {
+        return MinX;
+    }
+    [[nodiscard]] std::uint32_t min_y() const noexcept
+    {
+        return MinY;
+    }
+
+    [[nodiscard]] auto width() const noexcept -> uint32_t
+    {
+        return XRes;
+    }
+    [[nodiscard]] auto height() const noexcept -> uint32_t
+    {
+        return YRes;
+    }
+
+    openktg::pixel &at(uint32_t x, uint32_t y)
+    {
+        return *(Data + (y << shift_x()) + x);
+    }
+    [[nodiscard]] const openktg::pixel &at(uint32_t x, uint32_t y) const
+    {
+        return *(Data + (y << shift_x()) + x);
+    }
+    openktg::pixel *data() noexcept
+    {
+        return Data;
+    }
+    [[nodiscard]] const openktg::pixel *data() const noexcept
+    {
+        return Data;
+    }
+
     openktg::pixel *Data; // pointer to pixel data.
     sInt XRes;            // width of texture (must be a power of 2)
     sInt YRes;            // height of texture (must be a power of 2)

@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <cassert>
 
+#include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
 #include <openktg/legacy/gentexture.h>
 #include <openktg/noise/perlin.h>
@@ -108,38 +109,38 @@ sBool SizeMatchesWith(const GenTexture &x, const GenTexture &y)
 void SampleNearest(const GenTexture &input, openktg::pixel &result, sInt x, sInt y, sInt wrapMode)
 {
     if (wrapMode & 1)
-        x = sClamp(x, input.MinX, 0x1000000 - input.MinX);
+        x = sClamp<int>(x, input.min_x(), 0x1000000 - input.min_x());
     if (wrapMode & 2)
-        y = sClamp(y, input.MinY, 0x1000000 - input.MinY);
+        y = sClamp<int>(y, input.min_y(), 0x1000000 - input.min_y());
 
     x &= 0xffffff;
     y &= 0xffffff;
 
-    sInt ix = x >> (24 - input.ShiftX);
-    sInt iy = y >> (24 - input.ShiftY);
+    sInt ix = x >> (24 - input.shift_x());
+    sInt iy = y >> (24 - input.shift_y());
 
-    result = input.Data[(iy << input.ShiftX) + ix];
+    result = input.Data[(iy << input.shift_x()) + ix];
 }
 
 void SampleBilinear(const GenTexture &input, openktg::pixel &result, sInt x, sInt y, sInt wrapMode)
 {
     if (wrapMode & 1)
-        x = sClamp(x, input.MinX, 0x1000000 - input.MinX);
+        x = sClamp<int>(x, input.min_x(), 0x1000000 - input.min_x());
     if (wrapMode & 2)
-        y = sClamp(y, input.MinY, 0x1000000 - input.MinY);
+        y = sClamp<int>(y, input.min_y(), 0x1000000 - input.min_y());
 
-    x = (x - input.MinX) & 0xffffff;
-    y = (y - input.MinY) & 0xffffff;
+    x = (x - input.min_x()) & 0xffffff;
+    y = (y - input.min_y()) & 0xffffff;
 
-    sInt x0 = x >> (24 - input.ShiftX);
-    sInt x1 = (x0 + 1) & (input.XRes - 1);
-    sInt y0 = y >> (24 - input.ShiftY);
-    sInt y1 = (y0 + 1) & (input.YRes - 1);
-    sInt fx = sU32(x << (input.ShiftX + 8)) >> 16;
-    sInt fy = sU32(y << (input.ShiftY + 8)) >> 16;
+    sInt x0 = x >> (24 - input.shift_x());
+    sInt x1 = (x0 + 1) & (input.width() - 1);
+    sInt y0 = y >> (24 - input.shift_y());
+    sInt y1 = (y0 + 1) & (input.height() - 1);
+    sInt fx = sU32(x << (input.shift_x() + 8)) >> 16;
+    sInt fy = sU32(y << (input.shift_y() + 8)) >> 16;
 
-    openktg::pixel t0 = lerp(input.Data[(y0 << input.ShiftX) + x0], input.Data[(y0 << input.ShiftX) + x1], fx);
-    openktg::pixel t1 = lerp(input.Data[(y1 << input.ShiftX) + x0], input.Data[(y1 << input.ShiftX) + x1], fx);
+    openktg::pixel t0 = lerp(input.at(x0, y0), input.at(x1, y0), fx);
+    openktg::pixel t1 = lerp(input.at(x0, y1), input.at(x1, y1), fx);
     result = lerp(t0, t1, fy);
 }
 
@@ -154,13 +155,13 @@ void SampleFiltered(const GenTexture &input, openktg::pixel &result, sInt x, sIn
 void SampleGradient(const GenTexture &input, openktg::pixel &result, sInt x)
 {
     x = sClamp(x, 0, 1 << 24);
-    x -= x >> input.ShiftX; // x=(1<<24) -> Take rightmost pixel
+    x -= x >> input.shift_x(); // x=(1<<24) -> Take rightmost pixel
 
-    sInt x0 = x >> (24 - input.ShiftX);
-    sInt x1 = (x0 + 1) & (input.XRes - 1);
-    sInt fx = sU32(x << (input.ShiftX + 8)) >> 16;
+    sInt x0 = x >> (24 - input.shift_x());
+    sInt x1 = (x0 + 1) & (input.width() - 1);
+    sInt fx = sU32(x << (input.shift_x() + 8)) >> 16;
 
-    result = lerp(input.Data[x0], input.Data[x1], fx);
+    result = lerp(input.data()[x0], input.data()[x1], fx);
 }
 
 // ---- The operators themselves
@@ -190,19 +191,19 @@ void Noise(GenTexture &input, const GenTexture &grad, sInt freqX, sInt freqY, sI
         scaling *= (1 << 23);
     }
 
-    sInt offsX = (1 << (16 - input.ShiftX + freqX)) >> 1;
-    sInt offsY = (1 << (16 - input.ShiftY + freqY)) >> 1;
+    sInt offsX = (1 << (16 - input.shift_x() + freqX)) >> 1;
+    sInt offsY = (1 << (16 - input.shift_y() + freqY)) >> 1;
 
-    openktg::pixel *out = input.Data;
-    for (sInt y = 0; y < input.YRes; y++)
+    openktg::pixel *out = input.data();
+    for (sInt y = 0; y < input.height(); y++)
     {
-        for (sInt x = 0; x < input.XRes; x++)
+        for (sInt x = 0; x < input.width(); x++)
         {
             sInt n = offset;
             sF32 s = scaling;
 
-            sInt px = (x << (16 - input.ShiftX + freqX)) + offsX;
-            sInt py = (y << (16 - input.ShiftY + freqY)) + offsY;
+            sInt px = (x << (16 - input.shift_x() + freqX)) + offsX;
+            sInt py = (y << (16 - input.shift_y() + freqY)) + offsY;
             sInt mx = (1 << freqX) - 1;
             sInt my = (1 << freqY) - 1;
 
@@ -239,25 +240,25 @@ void GlowRect(GenTexture &input, const GenTexture &bgTex, const GenTexture &grad
     }
 
     // calculate bounding rect
-    sInt minX = sMax<sInt>(0, floor((orgx - sFAbs(ux) - sFAbs(vx)) * input.XRes));
-    sInt minY = sMax<sInt>(0, floor((orgy - sFAbs(uy) - sFAbs(vy)) * input.YRes));
-    sInt maxX = sMin<sInt>(input.XRes - 1, ceil((orgx + sFAbs(ux) + sFAbs(vx)) * input.XRes));
-    sInt maxY = sMin<sInt>(input.YRes - 1, ceil((orgy + sFAbs(uy) + sFAbs(vy)) * input.YRes));
+    sInt minX = sMax<sInt>(0, floor((orgx - sFAbs(ux) - sFAbs(vx)) * input.width()));
+    sInt minY = sMax<sInt>(0, floor((orgy - sFAbs(uy) - sFAbs(vy)) * input.height()));
+    sInt maxX = sMin<sInt>(input.width() - 1, ceil((orgx + sFAbs(ux) + sFAbs(vx)) * input.width()));
+    sInt maxY = sMin<sInt>(input.height() - 1, ceil((orgy + sFAbs(uy) + sFAbs(vy)) * input.height()));
 
     // solve for u0,v0 and deltas (cramer's rule)
     sF32 detM = ux * vy - uy * vx;
-    if (fabs(detM) * input.XRes * input.YRes < 0.25f) // smaller than a pixel? skip it.
+    if (fabs(detM) * input.width() * input.height() < 0.25f) // smaller than a pixel? skip it.
         return;
 
     sF32 invM = (1 << 16) / detM;
-    sF32 rmx = (minX + 0.5f) / input.XRes - orgx;
-    sF32 rmy = (minY + 0.5f) / input.YRes - orgy;
+    sF32 rmx = (minX + 0.5f) / input.width() - orgx;
+    sF32 rmy = (minY + 0.5f) / input.height() - orgy;
     sInt u0 = (rmx * vy - rmy * vx) * invM;
     sInt v0 = (ux * rmy - uy * rmx) * invM;
-    sInt dudx = vy * invM / input.XRes;
-    sInt dvdx = -uy * invM / input.XRes;
-    sInt dudy = -vx * invM / input.YRes;
-    sInt dvdy = ux * invM / input.YRes;
+    sInt dudx = vy * invM / input.width();
+    sInt dvdx = -uy * invM / input.width();
+    sInt dudy = -vx * invM / input.height();
+    sInt dvdy = ux * invM / input.height();
     sInt ruf = sMin<sInt>(rectu * 65536.0f, 65535);
     sInt rvf = sMin<sInt>(rectv * 65536.0f, 65535);
     sF32 gus = 1.0f / (65536.0f - ruf);
@@ -265,7 +266,7 @@ void GlowRect(GenTexture &input, const GenTexture &bgTex, const GenTexture &grad
 
     for (sInt y = minY; y <= maxY; y++)
     {
-        openktg::pixel *out = &input.Data[y * input.XRes + minX];
+        openktg::pixel *out = &input.at(minX, y); // input.Data[y * input.width() + minX];
         sInt u = u0;
         sInt v = v0;
 
@@ -319,7 +320,7 @@ void Cells(GenTexture &input, const GenTexture &grad, const CellCenter *centers,
 {
     assert(((mode & 1) == 0) ? nCenters >= 1 : nCenters >= 2);
 
-    openktg::pixel *out = input.Data;
+    openktg::pixel *out = input.data();
     CellPoint *points = NULL;
 
     points = new CellPoint[nCenters];
@@ -336,13 +337,13 @@ void Cells(GenTexture &input, const GenTexture &grad, const CellCenter *centers,
         points[i].node = i;
     }
 
-    sInt stepX = 1 << (scaleF - input.ShiftX);
-    sInt stepY = 1 << (scaleF - input.ShiftY);
+    sInt stepX = 1 << (scaleF - input.shift_x());
+    sInt stepY = 1 << (scaleF - input.shift_y());
     sInt yc = stepY >> 1;
 
     amp = amp * (1 << 24);
 
-    for (sInt y = 0; y < input.YRes; y++)
+    for (sInt y = 0; y < input.height(); y++)
     {
         sInt xc = stepX >> 1;
 
@@ -374,7 +375,7 @@ void Cells(GenTexture &input, const GenTexture &grad, const CellCenter *centers,
         best = best2 = sSquare(scale);
         besti = best2i = -1;
 
-        for (sInt x = 0; x < input.XRes; x++)
+        for (sInt x = 0; x < input.width(); x++)
         {
             sInt t, dx;
 
@@ -454,8 +455,8 @@ void ColorMatrixTransform(GenTexture &input, const GenTexture &x, const openktg:
 
     for (sInt i = 0; i < input.NPixels; i++)
     {
-        openktg::pixel &out = input.Data[i];
-        const openktg::pixel &in = x.Data[i];
+        openktg::pixel &out = input.data()[i];
+        const openktg::pixel &in = x.data()[i];
 
         // some kind of pixel matrix multiplication
         sInt r = MulShift16(m.get(0, 0), in.r()) + MulShift16(m.get(0, 1), in.g()) + MulShift16(m.get(0, 2), in.b()) + MulShift16(m.get(0, 3), in.a());
@@ -480,8 +481,8 @@ void ColorMatrixTransform(GenTexture &input, const GenTexture &x, const openktg:
 
 void CoordMatrixTransform(GenTexture &input, const GenTexture &in, const openktg::matrix44<float> &matrix, sInt mode)
 {
-    sInt scaleX = 1 << (24 - input.ShiftX);
-    sInt scaleY = 1 << (24 - input.ShiftY);
+    sInt scaleX = 1 << (24 - input.shift_x());
+    sInt scaleY = 1 << (24 - input.shift_y());
 
     sInt dudx = matrix.get(0, 0) * scaleX;
     sInt dudy = matrix.get(0, 1) * scaleY;
@@ -490,14 +491,14 @@ void CoordMatrixTransform(GenTexture &input, const GenTexture &in, const openktg
 
     sInt u0 = matrix.get(0, 3) * (1 << 24) + ((dudx + dudy) >> 1);
     sInt v0 = matrix.get(1, 3) * (1 << 24) + ((dvdx + dvdy) >> 1);
-    openktg::core::pixel *out = input.Data;
+    openktg::core::pixel *out = input.data();
 
-    for (sInt y = 0; y < input.YRes; y++)
+    for (sInt y = 0; y < input.height(); y++)
     {
         sInt u = u0;
         sInt v = v0;
 
-        for (sInt x = 0; x < input.XRes; x++)
+        for (sInt x = 0; x < input.width(); x++)
         {
             SampleFiltered(in, *out, u, v, mode);
 
@@ -517,8 +518,8 @@ void ColorRemap(GenTexture &input, const GenTexture &inTex, const GenTexture &ma
 
     for (sInt i = 0; i < input.NPixels; i++)
     {
-        const openktg::core::pixel &in = inTex.Data[i];
-        openktg::core::pixel &out = input.Data[i];
+        const openktg::core::pixel &in = inTex.data()[i];
+        openktg::core::pixel &out = input.data()[i];
 
         if (in.a() == 65535) // alpha==1, everything easy.
         {
@@ -555,22 +556,22 @@ void CoordRemap(GenTexture &input, const GenTexture &in, const GenTexture &remap
 {
     assert(SizeMatchesWith(remapTex));
 
-    const openktg::core::pixel *remap = remapTex.Data;
-    openktg::core::pixel *out = input.Data;
+    const openktg::core::pixel *remap = remapTex.data();
+    openktg::core::pixel *out = input.data();
 
-    sInt u0 = input.MinX;
-    sInt v0 = input.MinY;
+    sInt u0 = input.min_x();
+    sInt v0 = input.min_y();
     sInt scaleU = (1 << 24) * strengthU;
     sInt scaleV = (1 << 24) * strengthV;
-    sInt stepU = 1 << (24 - input.ShiftX);
-    sInt stepV = 1 << (24 - input.ShiftY);
+    sInt stepU = 1 << (24 - input.shift_x());
+    sInt stepV = 1 << (24 - input.shift_y());
 
-    for (sInt y = 0; y < input.YRes; y++)
+    for (sInt y = 0; y < input.height(); y++)
     {
         sInt u = u0;
         sInt v = v0;
 
-        for (sInt x = 0; x < input.XRes; x++)
+        for (sInt x = 0; x < input.width(); x++)
         {
             sInt dispU = u + MulShift16(scaleU, (remap->r() - 32768) * 2);
             sInt dispV = v + MulShift16(scaleV, (remap->g() - 32768) * 2);
@@ -589,14 +590,16 @@ void Derive(GenTexture &input, const GenTexture &in, DeriveOp op, sF32 strength)
 {
     assert(SizeMatchesWith(input, in));
 
-    openktg::core::pixel *out = input.Data;
+    openktg::core::pixel *out = input.data();
 
-    for (sInt y = 0; y < input.YRes; y++)
+    for (sInt y = 0; y < input.height(); y++)
     {
-        for (sInt x = 0; x < input.XRes; x++)
+        for (sInt x = 0; x < input.width(); x++)
         {
-            sInt dx2 = in.Data[y * input.XRes + ((x + 1) & (input.XRes - 1))].r() - in.Data[y * input.XRes + ((x - 1) & (input.XRes - 1))].r();
-            sInt dy2 = in.Data[x + ((y + 1) & (input.YRes - 1)) * input.XRes].r() - in.Data[x + ((y - 1) & (input.YRes - 1)) * input.XRes].r();
+            // sInt dx2 = in.Data[y * input.width() + ((x + 1) & (input.width() - 1))].r() - in.Data[y * input.width() + ((x - 1) & (input.width() - 1))].r();
+            // sInt dy2 = in.Data[x + ((y + 1) & (input.height() - 1)) * input.width()].r() - in.Data[x + ((y - 1) & (input.height() - 1)) * input.width()].r();
+            sInt dx2 = in.at((x + 1) & (input.width() - 1), y).r() - in.at((x - 1) & (input.width() - 1), y).r();
+            sInt dy2 = in.at(x, (y + 1) & (input.height() - 1)).r() - in.at(x, (y - 1) & (input.height() - 1)).r();
             sF32 dx = dx2 * strength / (2 * 65535.0f);
             sF32 dy = dy2 * strength / (2 * 65535.0f);
 
@@ -717,8 +720,8 @@ void Blur(GenTexture &input, const GenTexture &inImg, sF32 sizex, sF32 sizey, sI
 {
     assert(SizeMatchesWith(inImg));
 
-    sInt sizePixX = sClamp(sizex, 0.0f, 1.0f) * 64 * inImg.XRes / 2;
-    sInt sizePixY = sClamp(sizey, 0.0f, 1.0f) * 64 * inImg.YRes / 2;
+    sInt sizePixX = sClamp(sizex, 0.0f, 1.0f) * 64 * inImg.width() / 2;
+    sInt sizePixY = sClamp(sizey, 0.0f, 1.0f) * 64 * inImg.height() / 2;
 
     // no blur at all? just copy!
     if (order < 1 || (sizePixX <= 32 && sizePixY <= 32))
@@ -726,7 +729,7 @@ void Blur(GenTexture &input, const GenTexture &inImg, sF32 sizex, sF32 sizey, sI
     else
     {
         // allocate pixel buffers
-        sInt bufSize = sMax(input.XRes, input.YRes);
+        sInt bufSize = sMax(input.width(), input.height());
         openktg::core::pixel *buf1 = new openktg::core::pixel[bufSize];
         openktg::core::pixel *buf2 = new openktg::core::pixel[bufSize];
         const GenTexture *in = &inImg;
@@ -735,20 +738,20 @@ void Blur(GenTexture &input, const GenTexture &inImg, sF32 sizex, sF32 sizey, sI
         if (sizePixX > 32)
         {
             // go through image row by row
-            for (sInt y = 0; y < input.YRes; y++)
+            for (sInt y = 0; y < input.height(); y++)
             {
                 // copy pixels into buffer 1
-                sCopyMem(buf1, &in->Data[y * input.XRes], input.XRes * sizeof(openktg::core::pixel));
+                sCopyMem(buf1, &in->data()[y * input.width()], input.width() * sizeof(openktg::core::pixel));
 
                 // blur order times, ping-ponging between buffers
                 for (sInt i = 0; i < order; i++)
                 {
-                    Blur1DBuffer(buf2, buf1, input.XRes, sizePixX, (wrapMode & ClampU) ? 1 : 0);
+                    Blur1DBuffer(buf2, buf1, input.width(), sizePixX, (wrapMode & ClampU) ? 1 : 0);
                     sSwap(buf1, buf2);
                 }
 
                 // copy pixels back
-                sCopyMem(&input.Data[y * input.XRes], buf1, input.XRes * sizeof(openktg::core::pixel));
+                sCopyMem(&input.data()[y * input.width()], buf1, input.width() * sizeof(openktg::core::pixel));
             }
 
             in = &input;
@@ -758,33 +761,33 @@ void Blur(GenTexture &input, const GenTexture &inImg, sF32 sizex, sF32 sizey, sI
         if (sizePixY > 32)
         {
             // go through image column by column
-            for (sInt x = 0; x < input.XRes; x++)
+            for (sInt x = 0; x < input.width(); x++)
             {
                 // copy pixels into buffer 1
-                const openktg::core::pixel *src = &in->Data[x];
+                const openktg::core::pixel *src = &in->data()[x];
                 openktg::core::pixel *dst = buf1;
 
-                for (sInt y = 0; y < input.YRes; y++)
+                for (sInt y = 0; y < input.height(); y++)
                 {
                     *dst++ = *src;
-                    src += input.XRes;
+                    src += input.width();
                 }
 
                 // blur order times, ping-ponging between buffers
                 for (sInt i = 0; i < order; i++)
                 {
-                    Blur1DBuffer(buf2, buf1, input.YRes, sizePixY, (wrapMode & ClampV) ? 1 : 0);
+                    Blur1DBuffer(buf2, buf1, input.height(), sizePixY, (wrapMode & ClampV) ? 1 : 0);
                     sSwap(buf1, buf2);
                 }
 
                 // copy pixels back
                 src = buf1;
-                dst = &input.Data[x];
+                dst = &input.data()[x];
 
-                for (sInt y = 0; y < input.YRes; y++)
+                for (sInt y = 0; y < input.height(); y++)
                 {
                     *dst = *src++;
-                    dst += input.XRes;
+                    dst += input.width();
                 }
             }
         }
@@ -801,10 +804,10 @@ void Ternary(GenTexture &input, const GenTexture &in1Tex, const GenTexture &in2T
 
     for (sInt i = 0; i < input.NPixels; i++)
     {
-        openktg::core::pixel &out = input.Data[i];
-        const openktg::core::pixel &in1 = in1Tex.Data[i];
-        const openktg::core::pixel &in2 = in2Tex.Data[i];
-        const openktg::core::pixel &in3 = in3Tex.Data[i];
+        openktg::core::pixel &out = input.data()[i];
+        const openktg::core::pixel &in1 = in1Tex.data()[i];
+        const openktg::core::pixel &in2 = in2Tex.data()[i];
+        const openktg::core::pixel &in3 = in3Tex.data()[i];
 
         switch (op)
         {
@@ -829,29 +832,29 @@ void Paste(GenTexture &input, const GenTexture &bgTex, const GenTexture &inTex, 
         input = bgTex;
 
     // calculate bounding rect
-    sInt minX = sMax<sInt>(0, floor((orgx + sMin(ux, 0.0f) + sMin(vx, 0.0f)) * input.XRes));
-    sInt minY = sMax<sInt>(0, floor((orgy + sMin(uy, 0.0f) + sMin(vy, 0.0f)) * input.YRes));
-    sInt maxX = sMin<sInt>(input.XRes - 1, ceil((orgx + sMax(ux, 0.0f) + sMax(vx, 0.0f)) * input.XRes));
-    sInt maxY = sMin<sInt>(input.YRes - 1, ceil((orgy + sMax(uy, 0.0f) + sMax(vy, 0.0f)) * input.YRes));
+    sInt minX = sMax<sInt>(0, floor((orgx + sMin(ux, 0.0f) + sMin(vx, 0.0f)) * input.width()));
+    sInt minY = sMax<sInt>(0, floor((orgy + sMin(uy, 0.0f) + sMin(vy, 0.0f)) * input.height()));
+    sInt maxX = sMin<sInt>(input.width() - 1, ceil((orgx + sMax(ux, 0.0f) + sMax(vx, 0.0f)) * input.width()));
+    sInt maxY = sMin<sInt>(input.height() - 1, ceil((orgy + sMax(uy, 0.0f) + sMax(vy, 0.0f)) * input.height()));
 
     // solve for u0,v0 and deltas (Cramer's rule)
     sF32 detM = ux * vy - uy * vx;
-    if (fabs(detM) * input.XRes * input.YRes < 0.25f) // smaller than a pixel? skip it.
+    if (fabs(detM) * input.width() * input.height() < 0.25f) // smaller than a pixel? skip it.
         return;
 
     sF32 invM = (1 << 24) / detM;
-    sF32 rmx = (minX + 0.5f) / input.XRes - orgx;
-    sF32 rmy = (minY + 0.5f) / input.YRes - orgy;
+    sF32 rmx = (minX + 0.5f) / input.width() - orgx;
+    sF32 rmy = (minY + 0.5f) / input.height() - orgy;
     sInt u0 = (rmx * vy - rmy * vx) * invM;
     sInt v0 = (ux * rmy - uy * rmx) * invM;
-    sInt dudx = vy * invM / input.XRes;
-    sInt dvdx = -uy * invM / input.XRes;
-    sInt dudy = -vx * invM / input.YRes;
-    sInt dvdy = ux * invM / input.YRes;
+    sInt dudx = vy * invM / input.width();
+    sInt dvdx = -uy * invM / input.width();
+    sInt dudy = -vx * invM / input.height();
+    sInt dvdy = ux * invM / input.height();
 
     for (sInt y = minY; y <= maxY; y++)
     {
-        openktg::core::pixel *out = &input.Data[y * input.XRes + minX];
+        openktg::core::pixel *out = &input.at(minX, y);
         sInt u = u0;
         sInt v = v0;
 
@@ -964,15 +967,15 @@ void Bump(GenTexture &input, const GenTexture &surface, const GenTexture &normal
         H[2] = (L[2] + 1.0f) * scale;
     }
 
-    invX = 1.0f / input.XRes;
-    invY = 1.0f / input.YRes;
-    openktg::core::pixel *out = input.Data;
-    const openktg::core::pixel *surf = surface.Data;
-    const openktg::core::pixel *normal = normals.Data;
+    invX = 1.0f / input.width();
+    invY = 1.0f / input.height();
+    openktg::core::pixel *out = input.data();
+    const openktg::core::pixel *surf = surface.data();
+    const openktg::core::pixel *normal = normals.data();
 
-    for (sInt y = 0; y < input.YRes; y++)
+    for (sInt y = 0; y < input.height(); y++)
     {
-        for (sInt x = 0; x < input.XRes; x++)
+        for (sInt x = 0; x < input.width(); x++)
         {
             // determine vectors to light
             if (!directional)
@@ -1075,18 +1078,18 @@ void LinearCombine(GenTexture &input, const openktg::core::pixel &color, sF32 co
     c_a = MulShift16(t, color.a());
 
     // calculate output image
-    sInt u0 = input.MinX;
-    sInt v0 = input.MinY;
-    sInt stepU = 1 << (24 - input.ShiftX);
-    sInt stepV = 1 << (24 - input.ShiftY);
-    openktg::core::pixel *out = input.Data;
+    sInt u0 = input.min_x();
+    sInt v0 = input.min_y();
+    sInt stepU = 1 << (24 - input.shift_x());
+    sInt stepV = 1 << (24 - input.shift_y());
+    openktg::core::pixel *out = input.data();
 
-    for (sInt y = 0; y < input.YRes; y++)
+    for (sInt y = 0; y < input.height(); y++)
     {
         sInt u = u0;
         sInt v = v0;
 
-        for (sInt x = 0; x < input.XRes; x++)
+        for (sInt x = 0; x < input.width(); x++)
         {
             sInt acc_r, acc_g, acc_b, acc_a;
 

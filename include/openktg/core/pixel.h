@@ -1,7 +1,5 @@
 #pragma once
 
-#include <openktg/util/utility.h>
-
 #include <cstdint>
 
 namespace openktg::inline core
