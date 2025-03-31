@@ -8,7 +8,7 @@
 #include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
 #include <openktg/legacy/gentexture.h>
-#include <openktg/texture/procedural.h>
+#include <openktg/tex/procedural.h>
 
 #include <array>
 #include <cassert>

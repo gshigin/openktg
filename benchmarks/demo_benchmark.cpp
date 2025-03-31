@@ -3,7 +3,7 @@
 #include <openktg/core/pixel.h>
 #include <openktg/core/types.h>
 #include <openktg/legacy/gentexture.h>
-#include <openktg/texture/procedural.h>
+#include <openktg/tex/procedural.h>
 
 static void BM_Demo(benchmark::State &state)
 {

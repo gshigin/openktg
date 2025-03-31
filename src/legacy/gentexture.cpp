@@ -139,7 +139,7 @@ void GenTexture::SampleBilinear(openktg::pixel &result, sInt x, sInt y, sInt wra
     sInt fy = sU32(y << (ShiftY + 8)) >> 16;
 
     openktg::pixel t0 = lerp(Data[(y0 << ShiftX) + x0], Data[(y0 << ShiftX) + x1], fx);
-    openktg::core::pixel t1 = lerp(Data[(y1 << ShiftX) + x0], Data[(y1 << ShiftX) + x1], fx);
+    openktg::pixel t1 = lerp(Data[(y1 << ShiftX) + x0], Data[(y1 << ShiftX) + x1], fx);
     result = lerp(t0, t1, fy);
 }
 

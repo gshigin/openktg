@@ -8,7 +8,7 @@
 #include <openktg/core/pixel.h>
 #include <openktg/core/types.h>
 #include <openktg/legacy/gentexture.h>
-#include <openktg/texture/procedural.h>
+#include <openktg/tex/procedural.h>
 
 auto ReadImage(GenTexture &img, const char *filename) -> bool
 {

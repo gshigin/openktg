@@ -69,4 +69,4 @@ endif()
 
 # demo executable
 add_executable(demo demo.cpp)
-target_link_libraries(demo openktg) 
+target_link_libraries(demo openktg)
