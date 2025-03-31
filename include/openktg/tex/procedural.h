@@ -75,7 +75,7 @@ static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensi
     }
 
     // generate the image
-    dest.Cells(grad, centers, maxCount, 0.0f, GenTexture::CellInner);
+    Cells(dest, grad, centers, maxCount, 0.0f, CellInner);
 }
 
 // Transforms a grayscale image to a colored one with a matrix transform
@@ -97,5 +97,5 @@ static void Colorize(GenTexture &img, sU32 startCol, sU32 endCol)
     m.get(2, 3) = s.b() / 65535.0f;
 
     // transform
-    img.ColorMatrixTransform(img, m, sTRUE);
+    ColorMatrixTransform(img, img, m, sTRUE);
 }

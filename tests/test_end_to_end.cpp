@@ -58,8 +58,6 @@ auto ReadImage(GenTexture &img, const char *filename) -> bool
 auto GenerateTexture() -> GenTexture
 {
     using namespace openktg;
-    // initialize generator
-    InitTexgen();
 
     // colors
     openktg::pixel black{0xFF000000_argb};
@@ -75,7 +73,7 @@ auto GenerateTexture() -> GenTexture
     // simple noise test texture
     GenTexture noise;
     noise.Init(256, 256);
-    noise.Noise(gradBW, 2, 2, 6, 0.5f, 123, GenTexture::NoiseDirect | GenTexture::NoiseBandlimit | GenTexture::NoiseNormalize);
+    Noise(noise, gradBW, 2, 2, 6, 0.5f, 123, NoiseDirect | NoiseBandlimit | NoiseNormalize);
 
     // 4 "random voronoi" textures with different minimum distances
     GenTexture voro[4];
@@ -97,23 +95,22 @@ auto GenerateTexture() -> GenTexture
         inputs[i].Weight = 1.5f;
         inputs[i].UShift = 0.0f;
         inputs[i].VShift = 0.0f;
-        inputs[i].FilterMode = GenTexture::WrapU | GenTexture::WrapV | GenTexture::FilterNearest;
+        inputs[i].FilterMode = WrapU | WrapV | FilterNearest;
     }
 
     GenTexture baseTex;
     baseTex.Init(256, 256);
-    baseTex.LinearCombine(black, 0.0f, inputs, 4);
+    LinearCombine(baseTex, black, 0.0f, inputs, 4);
 
     // blur it
-    baseTex.Blur(baseTex, 0.0074f, 0.0074f, 1, GenTexture::WrapU | GenTexture::WrapV);
+    Blur(baseTex, baseTex, 0.0074f, 0.0074f, 1, WrapU | WrapV);
 
     // add a noise layer
     GenTexture noiseLayer;
     noiseLayer.Init(256, 256);
-    noiseLayer.Noise(LinearGradient(0xff000000, 0xff646464), 4, 4, 5, 0.995f, 3,
-                     GenTexture::NoiseDirect | GenTexture::NoiseNormalize | GenTexture::NoiseBandlimit);
+    Noise(noiseLayer, LinearGradient(0xff000000, 0xff646464), 4, 4, 5, 0.995f, 3, NoiseDirect | NoiseNormalize | NoiseBandlimit);
 
-    baseTex.Paste(baseTex, noiseLayer, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, GenTexture::CombineAdd, 0);
+    Paste(baseTex, baseTex, noiseLayer, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, CombineAdd, 0);
 
     // colorize it
     Colorize(baseTex, 0xff747d8e, 0xfff1feff);
@@ -131,15 +128,15 @@ auto GenerateTexture() -> GenTexture
     // Grid pattern GlowRect
     GenTexture rect1, rect1x, rect1n;
     rect1.Init(256, 256);
-    rect1.LinearCombine(black, 1.0f, 0, 0); // black background
-    rect1.GlowRect(rect1, gradWB, 0.5f, 0.5f, 0.41f, 0.0f, 0.0f, 0.25f, 0.7805f, 0.64f);
+    LinearCombine(rect1, black, 1.0f, 0, 0); // black background
+    GlowRect(rect1, rect1, gradWB, 0.5f, 0.5f, 0.41f, 0.0f, 0.0f, 0.25f, 0.7805f, 0.64f);
 
     rect1x.Init(256, 256);
-    rect1x.CoordMatrixTransform(rect1, m3, GenTexture::WrapU | GenTexture::WrapV | GenTexture::FilterBilinear);
+    CoordMatrixTransform(rect1x, rect1, m3, WrapU | WrapV | FilterBilinear);
 
     // Make a normalmap from it
     rect1n.Init(256, 256);
-    rect1n.Derive(rect1x, GenTexture::DeriveNormals, 2.5f);
+    Derive(rect1n, rect1x, DeriveNormals, 2.5f);
 
     // Apply as bump map
     GenTexture finalTex;
@@ -147,19 +144,19 @@ auto GenerateTexture() -> GenTexture
     openktg::pixel diff{0xffffffff_argb};
 
     finalTex.Init(256, 256);
-    finalTex.Bump(baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, sTRUE);
+    Bump(finalTex, baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, sTRUE);
 
     // Second grid pattern GlowRect
     GenTexture rect2, rect2x;
     rect2.Init(256, 256);
-    rect2.LinearCombine(white, 1.0f, 0, 0); // white background
-    rect2.GlowRect(rect2, gradBW, 0.5f, 0.5f, 0.36f, 0.0f, 0.0f, 0.20f, 0.8805f, 0.74f);
+    LinearCombine(rect2, white, 1.0f, 0, 0); // white background
+    GlowRect(rect2, rect2, gradBW, 0.5f, 0.5f, 0.36f, 0.0f, 0.0f, 0.20f, 0.8805f, 0.74f);
 
     rect2x.Init(256, 256);
-    rect2x.CoordMatrixTransform(rect2, m3, GenTexture::WrapU | GenTexture::WrapV | GenTexture::FilterBilinear);
+    CoordMatrixTransform(rect2x, rect2, m3, WrapU | WrapV | FilterBilinear);
 
     // Multiply it over
-    finalTex.Paste(finalTex, rect2x, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, GenTexture::CombineMultiply, 0);
+    Paste(finalTex, finalTex, rect2x, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, CombineMultiply, 0);
 
     return finalTex;
 }
