@@ -4,9 +4,7 @@
 #include <openktg/core/types.h>
 #include <openktg/util/utility.h>
 
-namespace openktg
-{
-inline namespace core
+namespace openktg::inline core
 {
 pixel::pixel(red8_t r, green8_t g, blue8_t b, alpha8_t a)
     : r_(util::expand8to16(std::to_underlying(r))), g_(util::expand8to16(std::to_underlying(g))), b_(util::expand8to16(std::to_underlying(b))),
@@ -228,5 +226,4 @@ auto combineLighten(pixel lhs, pixel rhs) -> pixel
 {
     return ((lhs & rhs) - ((lhs * rhs.a()) & (lhs.a() * rhs)) + (lhs | rhs)).set_alpha(static_cast<alpha16_t>(rhs.a() + util::mul_intens(lhs.a(), ~rhs.a())));
 }
-} // namespace core
-} // namespace openktg
+} // namespace openktg::inline core

@@ -22,6 +22,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
 add_library(${PROJECT_NAME} 
     src/legacy/gentexture.cpp
     src/core/pixel.cpp
+    src/core/matrix.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

@@ -116,14 +116,13 @@ auto GenerateTexture() -> GenTexture
     Colorize(baseTex, 0xff747d8e, 0xfff1feff);
 
     // Create transform matrix for grid pattern
-    openktg::matrix44<float> m1, m2, m3;
-    MatTranslate(m1, -0.5f, -0.5f, 0.0f);
-    MatScale(m2, 3.0f * sSQRT2F, 3.0f * sSQRT2F, 1.0f);
-    MatMult(m3, m2, m1);
-    MatRotateZ(m1, 0.125f * sPI2F);
-    MatMult(m2, m1, m3);
-    MatTranslate(m1, 0.5f, 0.5f, 0.0f);
-    MatMult(m3, m1, m2);
+    openktg::matrix44<float> m1 = matrix44<float>::translation(-0.5f, -0.5f, 0.0f);
+    openktg::matrix44<float> m2 = matrix44<float>::scale(3.0f * sSQRT2F, 3.0f * sSQRT2F, 1.0f);
+    openktg::matrix44<float> m3 = m2 * m1;
+    m1 = matrix44<float>::rotation_z(0.125f * sPI2F);
+    m2 = m1 * m3;
+    m1 = matrix44<float>::translation(0.5f, 0.5f, 0.0f);
+    m3 = m1 * m2;
 
     // Grid pattern GlowRect
     GenTexture rect1, rect1x, rect1n;

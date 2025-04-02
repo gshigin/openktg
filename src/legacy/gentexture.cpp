@@ -459,10 +459,10 @@ void ColorMatrixTransform(GenTexture &input, const GenTexture &x, const openktg:
         const openktg::pixel &in = x.data()[i];
 
         // some kind of pixel matrix multiplication
-        sInt r = MulShift16(m.get(0, 0), in.r()) + MulShift16(m.get(0, 1), in.g()) + MulShift16(m.get(0, 2), in.b()) + MulShift16(m.get(0, 3), in.a());
-        sInt g = MulShift16(m.get(1, 0), in.r()) + MulShift16(m.get(1, 1), in.g()) + MulShift16(m.get(1, 2), in.b()) + MulShift16(m.get(1, 3), in.a());
-        sInt b = MulShift16(m.get(2, 0), in.r()) + MulShift16(m.get(2, 1), in.g()) + MulShift16(m.get(2, 2), in.b()) + MulShift16(m.get(2, 3), in.a());
-        sInt a = MulShift16(m.get(3, 0), in.r()) + MulShift16(m.get(3, 1), in.g()) + MulShift16(m.get(3, 2), in.b()) + MulShift16(m.get(3, 3), in.a());
+        sInt r = MulShift16(m(0, 0), in.r()) + MulShift16(m(0, 1), in.g()) + MulShift16(m(0, 2), in.b()) + MulShift16(m(0, 3), in.a());
+        sInt g = MulShift16(m(1, 0), in.r()) + MulShift16(m(1, 1), in.g()) + MulShift16(m(1, 2), in.b()) + MulShift16(m(1, 3), in.a());
+        sInt b = MulShift16(m(2, 0), in.r()) + MulShift16(m(2, 1), in.g()) + MulShift16(m(2, 2), in.b()) + MulShift16(m(2, 3), in.a());
+        sInt a = MulShift16(m(3, 0), in.r()) + MulShift16(m(3, 1), in.g()) + MulShift16(m(3, 2), in.b()) + MulShift16(m(3, 3), in.a());
 
         a = sClamp<sInt>(a, 0, 65535);
         r = sClamp<sInt>(r, 0, 65535);
@@ -484,13 +484,13 @@ void CoordMatrixTransform(GenTexture &input, const GenTexture &in, const openktg
     sInt scaleX = 1 << (24 - input.shift_x());
     sInt scaleY = 1 << (24 - input.shift_y());
 
-    sInt dudx = matrix.get(0, 0) * scaleX;
-    sInt dudy = matrix.get(0, 1) * scaleY;
-    sInt dvdx = matrix.get(1, 0) * scaleX;
-    sInt dvdy = matrix.get(1, 1) * scaleY;
+    sInt dudx = matrix(0, 0) * scaleX;
+    sInt dudy = matrix(0, 1) * scaleY;
+    sInt dvdx = matrix(1, 0) * scaleX;
+    sInt dvdy = matrix(1, 1) * scaleY;
 
-    sInt u0 = matrix.get(0, 3) * (1 << 24) + ((dudx + dudy) >> 1);
-    sInt v0 = matrix.get(1, 3) * (1 << 24) + ((dvdx + dvdy) >> 1);
+    sInt u0 = matrix(0, 3) * (1 << 24) + ((dudx + dudy) >> 1);
+    sInt v0 = matrix(1, 3) * (1 << 24) + ((dvdx + dvdy) >> 1);
     openktg::core::pixel *out = input.data();
 
     for (sInt y = 0; y < input.height(); y++)

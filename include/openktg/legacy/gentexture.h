@@ -6,6 +6,7 @@
 /****************************************************************************/
 #pragma once
 
+#include "openktg/core/pixel.h"
 #include <openktg/core/matrix.h>
 #include <openktg/core/types.h>
 
