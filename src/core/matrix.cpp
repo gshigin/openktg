@@ -44,14 +44,14 @@ template <arithmetic T> auto matrix44<T>::column(size_t j) const -> std::array<T
 
 template <arithmetic T> auto matrix44<T>::identity() noexcept -> matrix44<T>
 {
-    matrix44<T> m{0};
+    matrix44<T> m(0);
     m(0, 0) = m(1, 1) = m(2, 2) = m(3, 3) = 1;
     return m;
 }
 
 template <arithmetic T> auto matrix44<T>::zero() noexcept -> matrix44<T>
 {
-    return matrix44<T>{0};
+    return matrix44<T>(0);
 }
 
 template <arithmetic T> auto matrix44<T>::scale(T sx, T sy, T sz) noexcept -> matrix44<T>
