@@ -7,8 +7,10 @@
 #pragma once
 
 #include "openktg/core/pixel.h"
+#include "openktg/util/utility.h"
 #include <openktg/core/matrix.h>
 #include <openktg/core/types.h>
+#include <vector>
 
 // fwd
 namespace openktg::inline core
@@ -38,71 +40,83 @@ struct LinearInput
 // X increases from 0 (left) to 1 (right)
 // Y increases from 0 (bottom) to 1 (top)
 
-struct GenTexture
+class GenTexture
 {
-    [[nodiscard]] std::uint32_t shift_x() const noexcept
+  public:
+    [[nodiscard]] auto shift_x() const noexcept -> std::uint32_t
     {
-        return ShiftX;
+        return shift_x_;
     }
-    [[nodiscard]] std::uint32_t shift_y() const noexcept
+    [[nodiscard]] auto shift_y() const noexcept -> std::uint32_t
     {
-        return ShiftY;
+        return shift_y_;
     }
-    [[nodiscard]] std::uint32_t min_x() const noexcept
+    [[nodiscard]] auto min_x() const noexcept -> std::uint32_t
     {
-        return MinX;
+        return min_x_;
     }
-    [[nodiscard]] std::uint32_t min_y() const noexcept
+    [[nodiscard]] auto min_y() const noexcept -> std::uint32_t
     {
-        return MinY;
+        return min_y_;
     }
 
     [[nodiscard]] auto width() const noexcept -> uint32_t
     {
-        return XRes;
+        return width_;
     }
     [[nodiscard]] auto height() const noexcept -> uint32_t
     {
-        return YRes;
+        return height_;
     }
 
-    openktg::pixel &at(uint32_t x, uint32_t y)
+    [[nodiscard]] auto pixel_count() const noexcept -> uint32_t
     {
-        return *(Data + (y << shift_x()) + x);
-    }
-    [[nodiscard]] const openktg::pixel &at(uint32_t x, uint32_t y) const
-    {
-        return *(Data + (y << shift_x()) + x);
-    }
-    openktg::pixel *data() noexcept
-    {
-        return Data;
-    }
-    [[nodiscard]] const openktg::pixel *data() const noexcept
-    {
-        return Data;
+        return width() * height();
     }
 
-    openktg::pixel *Data; // pointer to pixel data.
-    sInt XRes;            // width of texture (must be a power of 2)
-    sInt YRes;            // height of texture (must be a power of 2)
-    sInt NPixels;         // width*height (number of pixels)
+    auto at(uint32_t x, uint32_t y) -> openktg::pixel &
+    {
+        return data_[(y << shift_x()) + x];
+    }
+    [[nodiscard]] auto at(uint32_t x, uint32_t y) const -> const openktg::pixel &
+    {
+        return data_[(y << shift_x()) + x];
+    }
+    auto data() noexcept -> openktg::pixel *
+    {
+        return data_.data();
+    }
+    [[nodiscard]] auto data() const noexcept -> const openktg::pixel *
+    {
+        return data_.data();
+    }
+    void resize(uint32_t new_width, uint32_t new_heigth)
+    {
+        width_ = new_width;
+        height_ = new_heigth;
 
-    sInt ShiftX; // log2(XRes)
-    sInt ShiftY; // log2(YRes)
-    sInt MinX;   // (1 << 24) / (2 * XRes) = Min X for clamp to edge
-    sInt MinY;   // (1 << 24) / (2 * YRes) = Min Y for clamp to edge
+        data_.resize(width_ * height_);
 
-    GenTexture();
+        shift_x_ = openktg::util::floor_log_2(width_);
+        shift_y_ = openktg::util::floor_log_2(height_);
+
+        min_x_ = 1 << (24 - 1 - shift_x_);
+        min_y_ = 1 << (24 - 1 - shift_y_);
+    }
+
+    GenTexture() = default;
     GenTexture(sInt xres, sInt yres);
-    GenTexture(const GenTexture &x);
-    ~GenTexture();
 
-    void Init(sInt xres, sInt yres);
-    void UpdateSize();
-    void Swap(GenTexture &x);
+  private:
+    uint32_t width_;
+    uint32_t height_;
 
-    auto operator=(const GenTexture &x) -> GenTexture &;
+    std::vector<openktg::pixel> data_; // pixel data
+
+    uint32_t shift_x_; // log2(width)
+    uint32_t shift_y_; // log2(height)
+    uint32_t min_x_;   // (1 << 24) / (2 * width) = Min X for clamp to edge
+    uint32_t min_y_;   // (1 << 24) / (2 * height) = Min X for clamp to edge
 };
 
 [[nodiscard]] auto SizeMatchesWith(const GenTexture &x, const GenTexture &y) -> sBool;

@@ -5,6 +5,7 @@
 /***                                                                      ***/
 /****************************************************************************/
 
+#include "openktg/util/utility.h"
 #include <algorithm>
 #include <cassert>
 
@@ -20,89 +21,15 @@
 /***                                                                      ***/
 /****************************************************************************/
 
-GenTexture::GenTexture()
-{
-    Data = 0;
-    XRes = 0;
-    YRes = 0;
-
-    UpdateSize();
-}
-
 GenTexture::GenTexture(sInt xres, sInt yres)
+    : width_(xres), height_(yres), data_{width_ * height_}, shift_x_(openktg::util::floor_log_2(width_)), shift_y_(openktg::util::floor_log_2(height_)),
+      min_x_(1 << (24 - 1 - shift_x_)), min_y_(1 << (24 - 1 - shift_y_))
 {
-    Data = 0;
-    XRes = 0;
-    YRes = 0;
-
-    Init(xres, yres);
-}
-
-GenTexture::GenTexture(const GenTexture &x)
-{
-    XRes = x.XRes;
-    YRes = x.YRes;
-    UpdateSize();
-
-    Data = new openktg::pixel[NPixels];
-    sCopyMem(Data, x.Data, NPixels * sizeof(openktg::pixel));
-}
-
-GenTexture::~GenTexture()
-{
-    delete[] Data;
-}
-
-void GenTexture::Init(sInt xres, sInt yres)
-{
-    if (XRes != xres || YRes != yres)
-    {
-        delete[] Data;
-
-        assert(IsPowerOf2(xres));
-        assert(IsPowerOf2(yres));
-
-        XRes = xres;
-        YRes = yres;
-        UpdateSize();
-
-        Data = new openktg::pixel[NPixels];
-    }
-}
-
-void GenTexture::UpdateSize()
-{
-    NPixels = XRes * YRes;
-    ShiftX = FloorLog2(XRes);
-    ShiftY = FloorLog2(YRes);
-
-    MinX = 1 << (24 - 1 - ShiftX);
-    MinY = 1 << (24 - 1 - ShiftY);
-}
-
-void GenTexture::Swap(GenTexture &x)
-{
-    sSwap(Data, x.Data);
-    sSwap(XRes, x.XRes);
-    sSwap(YRes, x.YRes);
-    sSwap(NPixels, x.NPixels);
-    sSwap(ShiftX, x.ShiftX);
-    sSwap(ShiftY, x.ShiftY);
-    sSwap(MinX, x.MinX);
-    sSwap(MinY, x.MinY);
-}
-
-GenTexture &GenTexture::operator=(const GenTexture &x)
-{
-    GenTexture t = x;
-
-    Swap(t);
-    return *this;
 }
 
 sBool SizeMatchesWith(const GenTexture &x, const GenTexture &y)
 {
-    return y.XRes == x.XRes && y.YRes == x.YRes;
+    return y.width() == x.width() && y.height() == x.height();
 }
 
 // ---- Sampling helpers
@@ -119,7 +46,7 @@ void SampleNearest(const GenTexture &input, openktg::pixel &result, sInt x, sInt
     sInt ix = x >> (24 - input.shift_x());
     sInt iy = y >> (24 - input.shift_y());
 
-    result = input.Data[(iy << input.shift_x()) + ix];
+    result = input.data()[(iy << input.shift_x()) + ix];
 }
 
 void SampleBilinear(const GenTexture &input, openktg::pixel &result, sInt x, sInt y, sInt wrapMode)
@@ -453,7 +380,7 @@ void ColorMatrixTransform(GenTexture &input, const GenTexture &x, const openktg:
 
     std::transform(matrix.data.begin(), matrix.data.end(), m.data.begin(), [](const auto &fv) { return fv * 65536.0f; });
 
-    for (sInt i = 0; i < input.NPixels; i++)
+    for (sInt i = 0; i < input.pixel_count(); i++)
     {
         openktg::pixel &out = input.data()[i];
         const openktg::pixel &in = x.data()[i];
@@ -516,7 +443,7 @@ void ColorRemap(GenTexture &input, const GenTexture &inTex, const GenTexture &ma
 {
     assert(SizeMatchesWith(inTex));
 
-    for (sInt i = 0; i < input.NPixels; i++)
+    for (sInt i = 0; i < input.pixel_count(); i++)
     {
         const openktg::core::pixel &in = inTex.data()[i];
         openktg::core::pixel &out = input.data()[i];
@@ -802,7 +729,7 @@ void Ternary(GenTexture &input, const GenTexture &in1Tex, const GenTexture &in2T
 {
     assert(SizeMatchesWith(in1Tex) && SizeMatchesWith(in2Tex) && SizeMatchesWith(in3Tex));
 
-    for (sInt i = 0; i < input.NPixels; i++)
+    for (sInt i = 0; i < input.pixel_count(); i++)
     {
         openktg::core::pixel &out = input.data()[i];
         const openktg::core::pixel &in1 = in1Tex.data()[i];

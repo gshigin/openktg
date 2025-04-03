@@ -34,15 +34,15 @@ auto ReadImage(GenTexture &img, const char *filename) -> bool
     int width = header[12] | (header[13] << 8);
     int height = header[14] | (header[15] << 8);
 
-    img.Init(width, height);
+    img.resize(width, height);
 
-    std::vector<uint8_t> lineBuf(img.XRes * 4);
-    for (int y = 0; y < img.YRes; ++y)
+    std::vector<uint8_t> lineBuf(img.width() * 4);
+    for (int y = 0; y < img.height(); ++y)
     {
         file.read(reinterpret_cast<char *>(lineBuf.data()), lineBuf.size());
 
-        openktg::pixel *out = &img.Data[y * img.XRes];
-        for (int x = 0; x < img.XRes; ++x)
+        openktg::pixel *out = &img.data()[y * img.width()];
+        for (int x = 0; x < img.height(); ++x)
         {
             *out = openktg::pixel{static_cast<openktg::red16_t>((lineBuf[x * 4 + 2] << 8) | lineBuf[x * 4 + 0]),
                                   static_cast<openktg::green16_t>((lineBuf[x * 4 + 1] << 8) | lineBuf[x * 4 + 1]),
@@ -71,8 +71,7 @@ auto GenerateTexture() -> GenTexture
     GenTexture gradWhite = LinearGradient(0xffffffff, 0xffffffff);
 
     // simple noise test texture
-    GenTexture noise;
-    noise.Init(256, 256);
+    GenTexture noise(256, 256);
     Noise(noise, gradBW, 2, 2, 6, 0.5f, 123, NoiseDirect | NoiseBandlimit | NoiseNormalize);
 
     // 4 "random voronoi" textures with different minimum distances
@@ -83,7 +82,7 @@ auto GenerateTexture() -> GenTexture
 
     for (sInt i = 0; i < 4; i++)
     {
-        voro[i].Init(256, 256);
+        voro[i].resize(256, 256);
         RandomVoronoi(voro[i], gradWhite, voroIntens[i], voroCount[i], voroDist[i]);
     }
 
@@ -98,16 +97,14 @@ auto GenerateTexture() -> GenTexture
         inputs[i].FilterMode = WrapU | WrapV | FilterNearest;
     }
 
-    GenTexture baseTex;
-    baseTex.Init(256, 256);
+    GenTexture baseTex(256, 256);
     LinearCombine(baseTex, black, 0.0f, inputs, 4);
 
     // blur it
     Blur(baseTex, baseTex, 0.0074f, 0.0074f, 1, WrapU | WrapV);
 
     // add a noise layer
-    GenTexture noiseLayer;
-    noiseLayer.Init(256, 256);
+    GenTexture noiseLayer(256, 256);
     Noise(noiseLayer, LinearGradient(0xff000000, 0xff646464), 4, 4, 5, 0.995f, 3, NoiseDirect | NoiseNormalize | NoiseBandlimit);
 
     Paste(baseTex, baseTex, noiseLayer, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, CombineAdd, 0);
@@ -125,33 +122,27 @@ auto GenerateTexture() -> GenTexture
     m3 = m1 * m2;
 
     // Grid pattern GlowRect
-    GenTexture rect1, rect1x, rect1n;
-    rect1.Init(256, 256);
+    GenTexture rect1(256, 256), rect1x(256, 256), rect1n(256, 256);
     LinearCombine(rect1, black, 1.0f, 0, 0); // black background
     GlowRect(rect1, rect1, gradWB, 0.5f, 0.5f, 0.41f, 0.0f, 0.0f, 0.25f, 0.7805f, 0.64f);
 
-    rect1x.Init(256, 256);
     CoordMatrixTransform(rect1x, rect1, m3, WrapU | WrapV | FilterBilinear);
 
     // Make a normalmap from it
-    rect1n.Init(256, 256);
     Derive(rect1n, rect1x, DeriveNormals, 2.5f);
 
     // Apply as bump map
-    GenTexture finalTex;
+    GenTexture finalTex(256, 256);
     openktg::pixel amb{0xff101010_argb};
     openktg::pixel diff{0xffffffff_argb};
 
-    finalTex.Init(256, 256);
     Bump(finalTex, baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, sTRUE);
 
     // Second grid pattern GlowRect
-    GenTexture rect2, rect2x;
-    rect2.Init(256, 256);
+    GenTexture rect2(256, 256), rect2x(256, 256);
     LinearCombine(rect2, white, 1.0f, 0, 0); // white background
     GlowRect(rect2, rect2, gradBW, 0.5f, 0.5f, 0.36f, 0.0f, 0.0f, 0.20f, 0.8805f, 0.74f);
 
-    rect2x.Init(256, 256);
     CoordMatrixTransform(rect2x, rect2, m3, WrapU | WrapV | FilterBilinear);
 
     // Multiply it over
@@ -170,13 +161,13 @@ TEST(EndToEndTest, Test)
     fs::path test_file_path = fs::path(__FILE__).parent_path() / "data/end_to_end.tga";
     ASSERT_TRUE(ReadImage(reference, test_file_path.c_str()));
 
-    ASSERT_EQ(generated.XRes, reference.XRes);
-    ASSERT_EQ(generated.YRes, reference.YRes);
-    ASSERT_EQ(generated.NPixels, reference.NPixels);
-    for (auto i = 0; i < generated.NPixels; ++i)
+    ASSERT_EQ(generated.width(), reference.width());
+    ASSERT_EQ(generated.height(), reference.height());
+    ASSERT_EQ(generated.pixel_count(), reference.pixel_count());
+    for (auto i = 0; i < generated.pixel_count(); ++i)
     {
-        const auto &gen_pixel = *(generated.Data + i);
-        const auto &ref_pixel = *(reference.Data + i);
+        const auto &gen_pixel = *(generated.data() + i);
+        const auto &ref_pixel = *(reference.data() + i);
 
         ASSERT_EQ(gen_pixel.r() >> 8, ref_pixel.r() >> 8);
         ASSERT_EQ(gen_pixel.g() >> 8, ref_pixel.g() >> 8);

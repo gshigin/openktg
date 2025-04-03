@@ -13,11 +13,10 @@
 // Input colors are 0xaarrggbb (not premultiplied!)
 static auto LinearGradient(sU32 startCol, sU32 endCol) -> GenTexture
 {
-    GenTexture tex;
+    GenTexture tex(2, 1);
 
-    tex.Init(2, 1);
-    tex.Data[0] = openktg::pixel{static_cast<openktg::color32_t>(startCol)};
-    tex.Data[1] = openktg::pixel{static_cast<openktg::color32_t>(endCol)};
+    tex.at(0, 0) = openktg::pixel{static_cast<openktg::color32_t>(startCol)};
+    tex.at(1, 0) = openktg::pixel{static_cast<openktg::color32_t>(endCol)};
 
     return tex;
 }
