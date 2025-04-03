@@ -89,7 +89,7 @@ static void BM_Demo(benchmark::State &state)
         Bump(finalTex, baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, sTRUE);
 
         // Second grid pattern GlowRect
-        GenTexture rect2, rect2x;
+        GenTexture rect2(256, 256), rect2x(256, 256);
         LinearCombine(rect2, white, 1.0f, 0, 0); // white background
         GlowRect(rect2, rect2, gradBW, 0.5f, 0.5f, 0.36f, 0.0f, 0.0f, 0.20f, 0.8805f, 0.74f);
 
