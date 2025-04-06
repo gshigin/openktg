@@ -19,7 +19,7 @@
 #include <vector>
 
 // Save an image as .TGA file
-auto SaveImage(GenTexture &img, const char *filename) -> bool
+auto SaveImage(texture &img, const char *filename) -> bool
 {
     std::ofstream file(filename, std::ios::binary);
     if (!file)
@@ -65,7 +65,7 @@ auto SaveImage(GenTexture &img, const char *filename) -> bool
     return true;
 }
 
-auto ReadImage(GenTexture &img, const char *filename) -> bool
+auto ReadImage(texture &img, const char *filename) -> bool
 {
     std::ifstream file(filename, std::ios::binary);
     if (!file)
@@ -121,12 +121,12 @@ int main()
     auto startTime = std::chrono::high_resolution_clock::now();
 
     // create gradients
-    GenTexture gradBW = LinearGradient(0xff000000, 0xffffffff);
-    GenTexture gradWB = LinearGradient(0xffffffff, 0xff000000);
-    GenTexture gradWhite = LinearGradient(0xffffffff, 0xffffffff);
+    texture gradBW = LinearGradient(0xff000000, 0xffffffff);
+    texture gradWB = LinearGradient(0xffffffff, 0xff000000);
+    texture gradWhite = LinearGradient(0xffffffff, 0xffffffff);
 
     // simple noise test texture
-    GenTexture noise(256, 256);
+    texture noise(256, 256);
     Noise(noise, gradBW, 2, 2, 6, 0.5f, 123, NoiseDirect | NoiseBandlimit | NoiseNormalize);
 
     if (!SaveImage(noise, "noise.tga"))
@@ -136,7 +136,7 @@ int main()
     }
 
     // 4 "random voronoi" textures with different minimum distances
-    GenTexture voro[4];
+    texture voro[4];
     static sInt voroIntens[4] = {37, 42, 37, 37};
     static sInt voroCount[4] = {90, 132, 240, 255};
     static sF32 voroDist[4] = {0.125f, 0.063f, 0.063f, 0.063f};
@@ -166,7 +166,7 @@ int main()
         inputs[i].FilterMode = WrapU | WrapV | FilterNearest;
     }
 
-    GenTexture baseTex(256, 256);
+    texture baseTex(256, 256);
     LinearCombine(baseTex, black, 0.0f, inputs, 4);
 
     if (!SaveImage(baseTex, "base_linear_combine.tga"))
@@ -185,7 +185,7 @@ int main()
     }
 
     // add a noise layer
-    GenTexture noiseLayer(256, 256);
+    texture noiseLayer(256, 256);
     Noise(noiseLayer, LinearGradient(0xff000000, 0xff646464), 4, 4, 5, 0.995f, 3, NoiseDirect | NoiseNormalize | NoiseBandlimit);
 
     if (!SaveImage(noiseLayer, "noise_layer.tga"))
@@ -221,7 +221,7 @@ int main()
     m3 = m1 * m2;
 
     // Grid pattern GlowRect
-    GenTexture rect1(256, 256), rect1x(256, 256), rect1n(256, 256);
+    texture rect1(256, 256), rect1x(256, 256), rect1n(256, 256);
     LinearCombine(rect1, black, 1.0f, 0, 0); // black background
     GlowRect(rect1, rect1, gradWB, 0.5f, 0.5f, 0.41f, 0.0f, 0.0f, 0.25f, 0.7805f, 0.64f);
 
@@ -249,7 +249,7 @@ int main()
     }
 
     // Apply as bump map
-    GenTexture finalTex(256, 256);
+    texture finalTex(256, 256);
     openktg::pixel amb{0xff101010_argb};
     openktg::pixel diff{0xffffffff_argb};
 
@@ -262,7 +262,7 @@ int main()
     }
 
     // Second grid pattern GlowRect
-    GenTexture rect2(256, 256), rect2x(256, 256);
+    texture rect2(256, 256), rect2x(256, 256);
     LinearCombine(rect2, white, 1.0f, 0, 0); // white background
     GlowRect(rect2, rect2, gradBW, 0.5f, 0.5f, 0.36f, 0.0f, 0.0f, 0.20f, 0.8805f, 0.74f);
 

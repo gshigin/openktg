@@ -121,5 +121,5 @@ template <arithmetic T> auto matrix44<T>::operator/=(T scalar) -> matrix44<T> &
 
 } // namespace openktg::inline core
 
-template class openktg::matrix44<float>;
-template class openktg::matrix44<int>;
+template struct openktg::matrix44<float>;
+template struct openktg::matrix44<int>;

@@ -15,7 +15,7 @@
 // fwd
 namespace openktg::inline core
 {
-struct pixel;
+class pixel;
 template struct matrix44<float>;
 } // namespace openktg::inline core
 
@@ -27,20 +27,20 @@ struct CellCenter
 };
 
 // LinearInput. One input for "linear combine".
-struct GenTexture;
+struct texture;
 
 struct LinearInput
 {
-    const GenTexture *Tex; // the input texture
-    sF32 Weight;           // its weight
-    sF32 UShift, VShift;   // u/v translate parameter
-    sInt FilterMode;       // filtering mode (as in CoordMatrixTransform)
+    const texture *Tex;  // the input texture
+    sF32 Weight;         // its weight
+    sF32 UShift, VShift; // u/v translate parameter
+    sInt FilterMode;     // filtering mode (as in CoordMatrixTransform)
 };
 
 // X increases from 0 (left) to 1 (right)
 // Y increases from 0 (bottom) to 1 (top)
 
-class GenTexture
+class texture
 {
   public:
     [[nodiscard]] auto shift_x() const noexcept -> std::uint32_t
@@ -104,8 +104,8 @@ class GenTexture
         min_y_ = 1 << (24 - 1 - shift_y_);
     }
 
-    GenTexture() = default;
-    GenTexture(sInt xres, sInt yres);
+    texture() = default;
+    texture(sInt xres, sInt yres);
 
   private:
     uint32_t width_;
@@ -119,13 +119,13 @@ class GenTexture
     uint32_t min_y_;   // (1 << 24) / (2 * height) = Min X for clamp to edge
 };
 
-[[nodiscard]] auto SizeMatchesWith(const GenTexture &x, const GenTexture &y) -> sBool;
+[[nodiscard]] auto SizeMatchesWith(const texture &x, const texture &y) -> sBool;
 
 // Sampling helpers with filtering (coords are 1.7.24 fixed point)
-void SampleNearest(const GenTexture &input, openktg::core::pixel &result, sInt x, sInt y, sInt wrapMode);
-void SampleBilinear(const GenTexture &input, openktg::core::pixel &result, sInt x, sInt y, sInt wrapMode);
-void SampleFiltered(const GenTexture &input, openktg::core::pixel &result, sInt x, sInt y, sInt filterMode);
-void SampleGradient(const GenTexture &input, openktg::core::pixel &result, sInt x);
+void SampleNearest(const texture &input, openktg::core::pixel &result, sInt x, sInt y, sInt wrapMode);
+void SampleBilinear(const texture &input, openktg::core::pixel &result, sInt x, sInt y, sInt wrapMode);
+void SampleFiltered(const texture &input, openktg::core::pixel &result, sInt x, sInt y, sInt filterMode);
+void SampleGradient(const texture &input, openktg::core::pixel &result, sInt x);
 
 // Ternary operations
 enum TernaryOp
@@ -194,23 +194,22 @@ enum FilterMode
 };
 
 // Actual generator functions
-void Noise(GenTexture &input, const GenTexture &grad, sInt freqX, sInt freqY, sInt oct, sF32 fadeoff, sInt seed, sInt mode);
-void GlowRect(GenTexture &input, const GenTexture &background, const GenTexture &grad, sF32 orgx, sF32 orgy, sF32 ux, sF32 uy, sF32 vx, sF32 vy, sF32 rectu,
-              sF32 rectv);
-void Cells(GenTexture &input, const GenTexture &grad, const CellCenter *centers, sInt nCenters, sF32 amp, sInt mode);
+void Noise(texture &input, const texture &grad, sInt freqX, sInt freqY, sInt oct, sF32 fadeoff, sInt seed, sInt mode);
+void GlowRect(texture &input, const texture &background, const texture &grad, sF32 orgx, sF32 orgy, sF32 ux, sF32 uy, sF32 vx, sF32 vy, sF32 rectu, sF32 rectv);
+void Cells(texture &input, const texture &grad, const CellCenter *centers, sInt nCenters, sF32 amp, sInt mode);
 
 // Filters
-void ColorMatrixTransform(GenTexture &input, const GenTexture &in, const openktg::matrix44<float> &matrix, sBool clampPremult);
-void CoordMatrixTransform(GenTexture &input, const GenTexture &in, const openktg::matrix44<float> &matrix, sInt filterMode);
-void ColorRemap(GenTexture &input, const GenTexture &in, const GenTexture &mapR, const GenTexture &mapG, const GenTexture &mapB);
-void CoordRemap(GenTexture &input, const GenTexture &in, const GenTexture &remap, sF32 strengthU, sF32 strengthV, sInt filterMode);
-void Derive(GenTexture &input, const GenTexture &in, DeriveOp op, sF32 strength);
-void Blur(GenTexture &input, const GenTexture &in, sF32 sizex, sF32 sizey, sInt order, sInt mode);
+void ColorMatrixTransform(texture &input, const texture &in, const openktg::matrix44<float> &matrix, sBool clampPremult);
+void CoordMatrixTransform(texture &input, const texture &in, const openktg::matrix44<float> &matrix, sInt filterMode);
+void ColorRemap(texture &input, const texture &in, const texture &mapR, const texture &mapG, const texture &mapB);
+void CoordRemap(texture &input, const texture &in, const texture &remap, sF32 strengthU, sF32 strengthV, sInt filterMode);
+void Derive(texture &input, const texture &in, DeriveOp op, sF32 strength);
+void Blur(texture &input, const texture &in, sF32 sizex, sF32 sizey, sInt order, sInt mode);
 
 // Combiners
-void Ternary(GenTexture &input, const GenTexture &in1, const GenTexture &in2, const GenTexture &in3, TernaryOp op);
-void Paste(GenTexture &input, const GenTexture &background, const GenTexture &snippet, sF32 orgx, sF32 orgy, sF32 ux, sF32 uy, sF32 vx, sF32 vy, CombineOp op,
+void Ternary(texture &input, const texture &in1, const texture &in2, const texture &in3, TernaryOp op);
+void Paste(texture &input, const texture &background, const texture &snippet, sF32 orgx, sF32 orgy, sF32 ux, sF32 uy, sF32 vx, sF32 vy, CombineOp op,
            sInt mode);
-void Bump(GenTexture &input, const GenTexture &surface, const GenTexture &normals, const GenTexture *specular, const GenTexture *falloff, sF32 px, sF32 py,
-          sF32 pz, sF32 dx, sF32 dy, sF32 dz, const openktg::pixel &ambient, const openktg::pixel &diffuse, sBool directional);
-void LinearCombine(GenTexture &input, const openktg::pixel &color, sF32 constWeight, const LinearInput *inputs, sInt nInputs);
+void Bump(texture &input, const texture &surface, const texture &normals, const texture *specular, const texture *falloff, sF32 px, sF32 py, sF32 pz, sF32 dx,
+          sF32 dy, sF32 dz, const openktg::pixel &ambient, const openktg::pixel &diffuse, sBool directional);
+void LinearCombine(texture &input, const openktg::pixel &color, sF32 constWeight, const LinearInput *inputs, sInt nInputs);
