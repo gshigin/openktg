@@ -5,15 +5,16 @@
 
 #include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
+#include <openktg/core/texture.h>
 #include <openktg/core/types.h>
 #include <openktg/legacy/gentexture.h>
 #include <openktg/util/random.h>
 
 // Create a simple linear gradient texture
 // Input colors are 0xaarrggbb (not premultiplied!)
-static auto LinearGradient(sU32 startCol, sU32 endCol) -> texture
+static auto LinearGradient(sU32 startCol, sU32 endCol) -> openktg::texture
 {
-    texture tex(2, 1);
+    openktg::texture tex(2, 1);
 
     tex.at(0, 0) = openktg::pixel{static_cast<openktg::color32_t>(startCol)};
     tex.at(1, 0) = openktg::pixel{static_cast<openktg::color32_t>(endCol)};
@@ -22,7 +23,7 @@ static auto LinearGradient(sU32 startCol, sU32 endCol) -> texture
 }
 
 // Create a pattern of randomly colored voronoi cells
-static void RandomVoronoi(texture &dest, const texture &grad, sInt intensity, sInt maxCount, sF32 minDist, sInt seed = 0x339195BCC564A1E3)
+static void RandomVoronoi(openktg::texture &dest, const openktg::texture &grad, sInt intensity, sInt maxCount, sF32 minDist, sInt seed = 0x339195BCC564A1E3)
 {
     assert(maxCount <= 256);
     CellCenter centers[256];
@@ -78,7 +79,7 @@ static void RandomVoronoi(texture &dest, const texture &grad, sInt intensity, sI
 }
 
 // Transforms a grayscale image to a colored one with a matrix transform
-static void Colorize(texture &img, sU32 startCol, sU32 endCol)
+static void Colorize(openktg::texture &img, sU32 startCol, sU32 endCol)
 {
     openktg::matrix44<float> m;
     openktg::pixel s{static_cast<openktg::color32_t>(startCol)};

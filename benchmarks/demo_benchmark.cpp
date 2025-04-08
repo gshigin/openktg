@@ -2,6 +2,7 @@
 #include <benchmark/benchmark.h>
 
 #include <openktg/core/pixel.h>
+#include <openktg/core/texture.h>
 #include <openktg/core/types.h>
 #include <openktg/legacy/gentexture.h>
 #include <openktg/tex/procedural.h>

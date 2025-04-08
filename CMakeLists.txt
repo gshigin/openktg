@@ -23,6 +23,7 @@ add_library(${PROJECT_NAME}
     src/legacy/gentexture.cpp
     src/core/pixel.cpp
     src/core/matrix.cpp
+    src/core/texture.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

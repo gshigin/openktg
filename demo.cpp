@@ -7,6 +7,7 @@
 
 #include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
+#include <openktg/core/texture.h>
 #include <openktg/legacy/gentexture.h>
 #include <openktg/tex/procedural.h>
 
@@ -19,7 +20,7 @@
 #include <vector>
 
 // Save an image as .TGA file
-auto SaveImage(texture &img, const char *filename) -> bool
+auto SaveImage(openktg::texture &img, const char *filename) -> bool
 {
     std::ofstream file(filename, std::ios::binary);
     if (!file)
@@ -65,7 +66,7 @@ auto SaveImage(texture &img, const char *filename) -> bool
     return true;
 }
 
-auto ReadImage(texture &img, const char *filename) -> bool
+auto ReadImage(openktg::texture &img, const char *filename) -> bool
 {
     std::ifstream file(filename, std::ios::binary);
     if (!file)

@@ -6,11 +6,12 @@
 
 #include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
+#include <openktg/core/texture.h>
 #include <openktg/core/types.h>
 #include <openktg/legacy/gentexture.h>
 #include <openktg/tex/procedural.h>
 
-auto ReadImage(texture &img, const char *filename) -> bool
+auto ReadImage(openktg::texture &img, const char *filename) -> bool
 {
     std::ifstream file(filename, std::ios::binary);
     if (!file)
@@ -55,7 +56,7 @@ auto ReadImage(texture &img, const char *filename) -> bool
     return true;
 }
 
-auto GenerateTexture() -> texture
+auto GenerateTexture() -> openktg::texture
 {
     using namespace openktg;
 
@@ -155,8 +156,8 @@ TEST(EndToEndTest, Test)
 {
     namespace fs = std::filesystem;
 
-    texture generated = GenerateTexture();
-    texture reference;
+    openktg::texture generated = GenerateTexture();
+    openktg::texture reference;
 
     fs::path test_file_path = fs::path(__FILE__).parent_path() / "data/end_to_end.tga";
     ASSERT_TRUE(ReadImage(reference, test_file_path.c_str()));
