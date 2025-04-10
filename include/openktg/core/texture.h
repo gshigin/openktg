@@ -11,7 +11,7 @@ class texture
 {
   public:
     texture() = default;
-    texture(uint32_t xres, uint32_t yres);
+    texture(uint32_t width, uint32_t height);
 
     [[nodiscard]] auto shift_x() const noexcept -> uint32_t;
     [[nodiscard]] auto shift_y() const noexcept -> uint32_t;

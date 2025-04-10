@@ -1,13 +1,17 @@
+#include <cassert>
+
 #include <openktg/core/texture.h>
 #include <openktg/util/utility.h>
 
 namespace openktg::inline core
 {
 
-texture::texture(uint32_t xres, uint32_t yres)
-    : width_(xres), height_(yres), data_{width_ * height_}, shift_x_(openktg::util::floor_log_2(width_)), shift_y_(openktg::util::floor_log_2(height_)),
+texture::texture(uint32_t width, uint32_t height)
+    : width_(width), height_(height), data_{width_ * height_}, shift_x_(openktg::util::floor_log_2(width_)), shift_y_(openktg::util::floor_log_2(height_)),
       min_x_(1 << (24 - 1 - shift_x_)), min_y_(1 << (24 - 1 - shift_y_))
 {
+    assert(util::is_pow_of_2(width_));
+    assert(util::is_pow_of_2(height_));
 }
 
 [[nodiscard]] auto texture::shift_x() const noexcept -> uint32_t

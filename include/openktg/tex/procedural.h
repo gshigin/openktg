@@ -86,7 +86,6 @@ static void Colorize(openktg::texture &img, sU32 startCol, sU32 endCol)
     openktg::pixel e{static_cast<openktg::color32_t>(endCol)};
 
     // calculate matrix
-    // sSetMem(m, 0, sizeof(m));
     m.data.fill(0);
     m(0, 0) = (e.r() - s.r()) / 65535.0f;
     m(1, 1) = (e.g() - s.g()) / 65535.0f;
@@ -97,5 +96,5 @@ static void Colorize(openktg::texture &img, sU32 startCol, sU32 endCol)
     m(2, 3) = s.b() / 65535.0f;
 
     // transform
-    ColorMatrixTransform(img, img, m, sTRUE);
+    ColorMatrixTransform(img, img, m, true);
 }

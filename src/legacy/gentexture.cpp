@@ -8,19 +8,12 @@
 #include <algorithm>
 #include <cassert>
 
-#include <openktg/legacy/gentexture.h>
-
 #include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
 #include <openktg/core/texture.h>
+#include <openktg/legacy/gentexture.h>
 #include <openktg/noise/perlin.h>
 #include <openktg/util/helpers.h>
-
-/****************************************************************************/
-/***                                                                      ***/
-/***   texture                                                         ***/
-/***                                                                      ***/
-/****************************************************************************/
 
 sBool SizeMatchesWith(const openktg::texture &x, const openktg::texture &y)
 {
