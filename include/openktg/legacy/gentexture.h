@@ -19,13 +19,6 @@ class texture;
 template struct matrix44<float>;
 } // namespace openktg::inline core
 
-// CellCenter. 2D pair of coordinates plus a cell color.
-struct CellCenter
-{
-    sF32 x, y;
-    openktg::pixel color;
-};
-
 struct LinearInput
 {
     const openktg::texture *Tex; // the input texture
@@ -38,12 +31,6 @@ struct LinearInput
 // Y increases from 0 (bottom) to 1 (top)
 
 [[nodiscard]] auto SizeMatchesWith(const openktg::texture &x, const openktg::texture &y) -> sBool;
-
-// Sampling helpers with filtering (coords are 1.7.24 fixed point)
-void SampleNearest(const openktg::texture &input, openktg::pixel &result, sInt x, sInt y, sInt wrapMode);
-void SampleBilinear(const openktg::texture &input, openktg::pixel &result, sInt x, sInt y, sInt wrapMode);
-void SampleFiltered(const openktg::texture &input, openktg::pixel &result, sInt x, sInt y, sInt filterMode);
-void SampleGradient(const openktg::texture &input, openktg::pixel &result, sInt x);
 
 // Ternary operations
 enum TernaryOp
@@ -77,45 +64,6 @@ enum CombineOp
     CombineDarken,
     CombineLighten,
 };
-
-// Noise mode
-enum NoiseMode
-{
-    NoiseDirect = 0, // use noise(x,y) directly
-    NoiseAbs = 1,    // use abs(noise(x,y))
-
-    NoiseUnnorm = 0,    // unnormalized (no further scaling)
-    NoiseNormalize = 2, // normalized (scale so values always fall into [0,1] with no clamping)
-
-    NoiseWhite = 0,     // white noise function
-    NoiseBandlimit = 4, // bandlimited (perlin-like) noise function
-};
-
-// Cell mode
-enum CellMode
-{
-    CellInner = 0, // inner (distance to cell center)
-    CellOuter = 1, // outer (distance to edge)
-};
-
-// Filter mode
-enum FilterMode
-{
-    WrapU = 0,  // wrap in u direction
-    ClampU = 1, // clamp (to edge) in u direction
-
-    WrapV = 0,  // wrap in v direction
-    ClampV = 2, // clamp (to edge) in v direction
-
-    FilterNearest = 0,  // nearest neighbor (point sampling)
-    FilterBilinear = 4, // bilinear filtering.
-};
-
-// Actual generator functions
-void Noise(openktg::texture &input, const openktg::texture &grad, sInt freqX, sInt freqY, sInt oct, sF32 fadeoff, sInt seed, sInt mode);
-void GlowRect(openktg::texture &input, const openktg::texture &background, const openktg::texture &grad, sF32 orgx, sF32 orgy, sF32 ux, sF32 uy, sF32 vx,
-              sF32 vy, sF32 rectu, sF32 rectv);
-void Cells(openktg::texture &input, const openktg::texture &grad, const CellCenter *centers, sInt nCenters, sF32 amp, sInt mode);
 
 // Filters
 void ColorMatrixTransform(openktg::texture &input, const openktg::texture &in, const openktg::matrix44<float> &matrix, sBool clampPremult);

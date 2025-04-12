@@ -69,4 +69,9 @@ OKTG(always_inline) auto unsigned_mul_shift_8(std::uint32_t a, std::uint32_t b) 
 {
     return (static_cast<std::uint64_t>(a) * static_cast<std::uint64_t>(b) + 0x80) >> 8;
 }
+
+template <class T> OKTG(always_inline) auto square(T x) noexcept -> T
+{
+    return x * x;
+}
 } // namespace openktg::util
