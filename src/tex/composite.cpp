@@ -1,10 +1,10 @@
 #include <cassert>
 
-#include <openktg/tex/composite.h>
-#include <openktg/util/utility.h>
 #include <openktg/core/pixel.h>
 #include <openktg/core/texture.h>
+#include <openktg/tex/composite.h>
 #include <openktg/tex/sampling.h>
+#include <openktg/util/utility.h>
 
 void Ternary(openktg::texture &input, const openktg::texture &in1Tex, const openktg::texture &in2Tex, const openktg::texture &in3Tex, TernaryOp op)
 {
@@ -32,8 +32,8 @@ void Ternary(openktg::texture &input, const openktg::texture &in1Tex, const open
     }
 }
 
-void Paste(openktg::texture &input, const openktg::texture &bgTex, const openktg::texture &inTex, float orgx, float orgy, float ux, float uy, float vx, float vy,
-           CombineOp op, int32_t mode)
+void Paste(openktg::texture &input, const openktg::texture &bgTex, const openktg::texture &inTex, float orgx, float orgy, float ux, float uy, float vx,
+           float vy, CombineOp op, int32_t mode)
 {
     assert(texture_size_matches(input, bgTex));
 

@@ -1,7 +1,6 @@
 #include <utility>
 
 #include <openktg/core/pixel.h>
-#include <openktg/core/types.h>
 #include <openktg/util/utility.h>
 
 namespace openktg::inline core

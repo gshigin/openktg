@@ -1,14 +1,26 @@
 #pragma once
 
-#include <openktg/util/macro.h>
-
 #include <algorithm>
 #include <bit>
 #include <cmath>
 #include <cstdint>
+#include <numbers>
+
+#include <openktg/util/macro.h>
 
 namespace openktg::util
 {
+
+inline namespace constants
+{
+constexpr double PI = std::numbers::pi_v<double>;
+constexpr double PI2 = 2 * PI;
+constexpr float PIF = std::numbers::pi_v<float>;
+constexpr float PI2F = 2 * PIF;
+constexpr double SQRT2 = std::numbers::sqrt2_v<double>;
+constexpr float SQRT2F = std::numbers::sqrt2_v<float>;
+} // namespace constants
+
 // Expands 8bit value to 16bit by concating value twice
 OKTG(always_inline) constexpr auto expand8to16(std::uint8_t x) noexcept -> std::uint16_t
 {

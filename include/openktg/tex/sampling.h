@@ -2,6 +2,13 @@
 
 #include <cstdint>
 
+// fwd
+namespace openktg::inline core
+{
+class texture;
+class pixel;
+} // namespace openktg::inline core
+
 // Filter mode
 enum FilterMode
 {
@@ -14,13 +21,6 @@ enum FilterMode
     FilterNearest = 0,  // nearest neighbor (point sampling)
     FilterBilinear = 4, // bilinear filtering.
 };
-
-// fwd
-namespace openktg::inline core
-{
-class texture;
-class pixel;
-} // namespace openktg::inline core
 
 // Sampling helpers with filtering (coords are 1.7.24 fixed point)
 void SampleNearest(const openktg::texture &input, openktg::pixel &result, int32_t x, int32_t y, int32_t wrapMode);

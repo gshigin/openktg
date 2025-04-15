@@ -12,9 +12,9 @@ class texture;
 struct LinearInput
 {
     const openktg::texture *Tex; // the input texture
-    float Weight;                 // its weight
-    float UShift, VShift;         // u/v translate parameter
-    int32_t FilterMode;             // filtering mode (as in CoordMatrixTransform)
+    float Weight;                // its weight
+    float UShift, VShift;        // u/v translate parameter
+    int32_t FilterMode;          // filtering mode (as in CoordMatrixTransform)
 };
 
 // Ternary operations
@@ -47,6 +47,6 @@ void Ternary(openktg::texture &input, const openktg::texture &in1, const openktg
 void Paste(openktg::texture &input, const openktg::texture &background, const openktg::texture &snippet, float orgx, float orgy, float ux, float uy, float vx,
            float vy, CombineOp op, int32_t mode);
 void Bump(openktg::texture &input, const openktg::texture &surface, const openktg::texture &normals, const openktg::texture *specular,
-          const openktg::texture *falloff, float px, float py, float pz, float dx, float dy, float dz, const openktg::pixel &ambient, const openktg::pixel &diffuse,
-          bool directional);
+          const openktg::texture *falloff, float px, float py, float pz, float dx, float dy, float dz, const openktg::pixel &ambient,
+          const openktg::pixel &diffuse, bool directional);
 void LinearCombine(openktg::texture &input, const openktg::pixel &color, float constWeight, const LinearInput *inputs, int32_t nInputs);

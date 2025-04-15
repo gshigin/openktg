@@ -8,9 +8,10 @@
 #include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
 #include <openktg/core/texture.h>
-#include <openktg/tex/procedural.h>
 #include <openktg/tex/composite.h>
+#include <openktg/tex/procedural.h>
 #include <openktg/tex/sampling.h>
+#include <openktg/util/utility.h>
 
 #include <array>
 #include <chrono>
@@ -44,13 +45,13 @@ auto SaveImage(openktg::texture &img, const char *filename) -> bool
 
     // write image data
     std::vector<std::uint8_t> lineBuf(img.width() * 4);
-    for (sInt y = 0; y < img.height(); y++)
+    for (int32_t y = 0; y < img.height(); y++)
     {
         const openktg::pixel *in = &img.data()[y * img.width()];
 
         // convert a line of pixels (as simple as possible - no gamma correction
         // etc.)
-        for (sInt x = 0; x < img.width(); x++)
+        for (int32_t x = 0; x < img.width(); x++)
         {
             lineBuf[x * 4 + 0] = in->b() >> 8;
             lineBuf[x * 4 + 1] = in->g() >> 8;
@@ -114,6 +115,7 @@ auto ReadImage(openktg::texture &img, const char *filename) -> bool
 int main()
 {
     using namespace openktg;
+    using namespace openktg::util::constants;
 
     // colors
     openktg::pixel black{0xFF000000_argb};
@@ -138,11 +140,11 @@ int main()
 
     // 4 "random voronoi" textures with different minimum distances
     texture voro[4];
-    static sInt voroIntens[4] = {37, 42, 37, 37};
-    static sInt voroCount[4] = {90, 132, 240, 255};
-    static sF32 voroDist[4] = {0.125f, 0.063f, 0.063f, 0.063f};
+    static int32_t voroIntens[4] = {37, 42, 37, 37};
+    static int32_t voroCount[4] = {90, 132, 240, 255};
+    static float voroDist[4] = {0.125f, 0.063f, 0.063f, 0.063f};
 
-    for (sInt i = 0; i < 4; i++)
+    for (int32_t i = 0; i < 4; i++)
     {
         voro[i].resize(256, 256);
         RandomVoronoi(voro[i], gradWhite, voroIntens[i], voroCount[i], voroDist[i]);
@@ -158,7 +160,7 @@ int main()
 
     // linear combination of them
     LinearInput inputs[4];
-    for (sInt i = 0; i < 4; i++)
+    for (int32_t i = 0; i < 4; i++)
     {
         inputs[i].Tex = &voro[i];
         inputs[i].Weight = 1.5f;
@@ -214,9 +216,9 @@ int main()
 
     // Create transform matrix for grid pattern
     auto m1 = matrix44<float>::translation(-0.5f, -0.5f, 0.0f);
-    auto m2 = matrix44<float>::scale(3.0f * sSQRT2F, 3.0f * sSQRT2F, 1.0f);
+    auto m2 = matrix44<float>::scale(3.0f * SQRT2F, 3.0f * SQRT2F, 1.0f);
     auto m3 = m2 * m1;
-    m1 = matrix44<float>::rotation_z(0.125f * sPI2F);
+    m1 = matrix44<float>::rotation_z(0.125f * PI2F);
     m2 = m1 * m3;
     m1 = matrix44<float>::translation(0.5f, 0.5f, 0.0f);
     m3 = m1 * m2;
@@ -254,7 +256,7 @@ int main()
     openktg::pixel amb{0xff101010_argb};
     openktg::pixel diff{0xffffffff_argb};
 
-    Bump(finalTex, baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, sTRUE);
+    Bump(finalTex, baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, true);
 
     if (!SaveImage(finalTex, "final.tga"))
     {

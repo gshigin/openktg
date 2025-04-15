@@ -1,16 +1,18 @@
-#include "openktg/core/matrix.h"
 #include <benchmark/benchmark.h>
 
+#include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
 #include <openktg/core/texture.h>
-#include <openktg/core/types.h>
-#include <openktg/tex/procedural.h>
 #include <openktg/tex/composite.h>
+#include <openktg/tex/procedural.h>
 #include <openktg/tex/sampling.h>
+#include <openktg/util/utility.h>
 
 static void BM_Demo(benchmark::State &state)
 {
     using namespace openktg;
+    using namespace openktg::util::constants;
+
     for (auto _ : state)
     {
         // colors
@@ -28,11 +30,11 @@ static void BM_Demo(benchmark::State &state)
 
         // 4 "random voronoi" textures with different minimum distances
         texture voro[4];
-        static sInt voroIntens[4] = {37, 42, 37, 37};
-        static sInt voroCount[4] = {90, 132, 240, 255};
-        static sF32 voroDist[4] = {0.125f, 0.063f, 0.063f, 0.063f};
+        static int32_t voroIntens[4] = {37, 42, 37, 37};
+        static int32_t voroCount[4] = {90, 132, 240, 255};
+        static float voroDist[4] = {0.125f, 0.063f, 0.063f, 0.063f};
 
-        for (sInt i = 0; i < 4; i++)
+        for (int32_t i = 0; i < 4; i++)
         {
             voro[i].resize(256, 256);
             RandomVoronoi(voro[i], gradWhite, voroIntens[i], voroCount[i], voroDist[i]);
@@ -40,7 +42,7 @@ static void BM_Demo(benchmark::State &state)
 
         // linear combination of them
         LinearInput inputs[4];
-        for (sInt i = 0; i < 4; i++)
+        for (int32_t i = 0; i < 4; i++)
         {
             inputs[i].Tex = &voro[i];
             inputs[i].Weight = 1.5f;
@@ -66,9 +68,9 @@ static void BM_Demo(benchmark::State &state)
 
         // Create transform matrix for grid pattern
         openktg::matrix44<float> m1 = matrix44<float>::translation(-0.5f, -0.5f, 0.0f);
-        openktg::matrix44<float> m2 = matrix44<float>::scale(3.0f * sSQRT2F, 3.0f * sSQRT2F, 1.0f);
+        openktg::matrix44<float> m2 = matrix44<float>::scale(3.0f * SQRT2F, 3.0f * SQRT2F, 1.0f);
         openktg::matrix44<float> m3 = m2 * m1;
-        m1 = matrix44<float>::rotation_z(0.125f * sPI2F);
+        m1 = matrix44<float>::rotation_z(0.125f * PI2F);
         m2 = m1 * m3;
         m1 = matrix44<float>::translation(0.5f, 0.5f, 0.0f);
         m3 = m1 * m2;
@@ -88,7 +90,7 @@ static void BM_Demo(benchmark::State &state)
         openktg::pixel amb{0xff101010_argb};
         openktg::pixel diff{0xffffffff_argb};
 
-        Bump(finalTex, baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, sTRUE);
+        Bump(finalTex, baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, true);
 
         // Second grid pattern GlowRect
         texture rect2(256, 256), rect2x(256, 256);

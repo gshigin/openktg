@@ -5,10 +5,11 @@
 #include <openktg/util/concepts.h>
 
 // fwd
-namespace openktg::inline core{
-    class texture;
-    template <arithmetic T> struct matrix44;
-} 
+namespace openktg::inline core
+{
+class texture;
+template <arithmetic T> struct matrix44;
+} // namespace openktg::inline core
 
 // Derive operations
 enum DeriveOp

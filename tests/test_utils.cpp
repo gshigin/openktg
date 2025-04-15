@@ -2,7 +2,6 @@
 
 #include <random>
 
-#include <openktg/core/types.h>
 #include <openktg/util/utility.h>
 
 using namespace openktg;

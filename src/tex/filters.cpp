@@ -1,10 +1,10 @@
 #include <algorithm>
 #include <cassert>
 
-#include <openktg/tex/filters.h>
+#include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
 #include <openktg/core/texture.h>
-#include <openktg/core/matrix.h>
+#include <openktg/tex/filters.h>
 #include <openktg/tex/sampling.h>
 #include <openktg/util/utility.h>
 
@@ -21,10 +21,14 @@ void ColorMatrixTransform(openktg::texture &input, const openktg::texture &x, co
         const openktg::pixel &in = x.data()[i];
 
         // some kind of pixel matrix multiplication
-        int32_t r = openktg::util::mul_shift_16(m(0, 0), in.r()) + openktg::util::mul_shift_16(m(0, 1), in.g()) + openktg::util::mul_shift_16(m(0, 2), in.b()) + openktg::util::mul_shift_16(m(0, 3), in.a());
-        int32_t g = openktg::util::mul_shift_16(m(1, 0), in.r()) + openktg::util::mul_shift_16(m(1, 1), in.g()) + openktg::util::mul_shift_16(m(1, 2), in.b()) + openktg::util::mul_shift_16(m(1, 3), in.a());
-        int32_t b = openktg::util::mul_shift_16(m(2, 0), in.r()) + openktg::util::mul_shift_16(m(2, 1), in.g()) + openktg::util::mul_shift_16(m(2, 2), in.b()) + openktg::util::mul_shift_16(m(2, 3), in.a());
-        int32_t a = openktg::util::mul_shift_16(m(3, 0), in.r()) + openktg::util::mul_shift_16(m(3, 1), in.g()) + openktg::util::mul_shift_16(m(3, 2), in.b()) + openktg::util::mul_shift_16(m(3, 3), in.a());
+        int32_t r = openktg::util::mul_shift_16(m(0, 0), in.r()) + openktg::util::mul_shift_16(m(0, 1), in.g()) + openktg::util::mul_shift_16(m(0, 2), in.b()) +
+                    openktg::util::mul_shift_16(m(0, 3), in.a());
+        int32_t g = openktg::util::mul_shift_16(m(1, 0), in.r()) + openktg::util::mul_shift_16(m(1, 1), in.g()) + openktg::util::mul_shift_16(m(1, 2), in.b()) +
+                    openktg::util::mul_shift_16(m(1, 3), in.a());
+        int32_t b = openktg::util::mul_shift_16(m(2, 0), in.r()) + openktg::util::mul_shift_16(m(2, 1), in.g()) + openktg::util::mul_shift_16(m(2, 2), in.b()) +
+                    openktg::util::mul_shift_16(m(2, 3), in.a());
+        int32_t a = openktg::util::mul_shift_16(m(3, 0), in.r()) + openktg::util::mul_shift_16(m(3, 1), in.g()) + openktg::util::mul_shift_16(m(3, 2), in.b()) +
+                    openktg::util::mul_shift_16(m(3, 3), in.a());
 
         a = std::clamp<int32_t>(a, 0, 65535);
         r = std::clamp<int32_t>(r, 0, 65535);
@@ -94,9 +98,10 @@ void ColorRemap(openktg::texture &input, const openktg::texture &inTex, const op
             SampleGradient(mapG, colG, (in.g() << 8) + ((in.g() + 128) >> 8));
             SampleGradient(mapB, colB, (in.b() << 8) + ((in.b() + 128) >> 8));
 
-            out = openktg::core::pixel(static_cast<openktg::red16_t>(std::min(colR.r() + colG.r() + colB.r(), 65535)),
-                                       static_cast<openktg::green16_t>(std::min(colR.g() + colG.g() + colB.g(), 65535)),
-                                       static_cast<openktg::blue16_t>(std::min(colR.b() + colG.b() + colB.b(), 65535)), static_cast<openktg::alpha16_t>(in.a()));
+            out =
+                openktg::core::pixel(static_cast<openktg::red16_t>(std::min(colR.r() + colG.r() + colB.r(), 65535)),
+                                     static_cast<openktg::green16_t>(std::min(colR.g() + colG.g() + colB.g(), 65535)),
+                                     static_cast<openktg::blue16_t>(std::min(colR.b() + colG.b() + colB.b(), 65535)), static_cast<openktg::alpha16_t>(in.a()));
         }
         else if (in.a()) // alpha!=0
         {
@@ -161,8 +166,9 @@ void Derive(openktg::texture &input, const openktg::texture &in, DeriveOp op, fl
     {
         for (int32_t x = 0; x < input.width(); x++)
         {
-            // int32_t dx2 = in.Data[y * input.width() + ((x + 1) & (input.width() - 1))].r() - in.Data[y * input.width() + ((x - 1) & (input.width() - 1))].r();
-            // int32_t dy2 = in.Data[x + ((y + 1) & (input.height() - 1)) * input.width()].r() - in.Data[x + ((y - 1) & (input.height() - 1)) * input.width()].r();
+            // int32_t dx2 = in.Data[y * input.width() + ((x + 1) & (input.width() - 1))].r() - in.Data[y * input.width() + ((x - 1) & (input.width() -
+            // 1))].r(); int32_t dy2 = in.Data[x + ((y + 1) & (input.height() - 1)) * input.width()].r() - in.Data[x + ((y - 1) & (input.height() - 1)) *
+            // input.width()].r();
             int32_t dx2 = in.at((x + 1) & (input.width() - 1), y).r() - in.at((x - 1) & (input.width() - 1), y).r();
             int32_t dy2 = in.at(x, (y + 1) & (input.height() - 1)).r() - in.at(x, (y - 1) & (input.height() - 1)).r();
             float dx = dx2 * strength / (2 * 65535.0f);
@@ -182,7 +188,8 @@ void Derive(openktg::texture &input, const openktg::texture &in, DeriveOp op, fl
 
                 *out = openktg::core::pixel{static_cast<openktg::red16_t>(std::clamp<int32_t>(-dx * scale + 32768.0f, 0, 65535)),
                                             static_cast<openktg::green16_t>(std::clamp<int32_t>(-dy * scale + 32768.0f, 0, 65535)),
-                                            static_cast<openktg::blue16_t>(std::clamp<int32_t>(scale + 32768.0f, 0, 65535)), static_cast<openktg::alpha16_t>(65535)};
+                                            static_cast<openktg::blue16_t>(std::clamp<int32_t>(scale + 32768.0f, 0, 65535)),
+                                            static_cast<openktg::alpha16_t>(65535)};
                 break;
             }
             }
@@ -284,7 +291,6 @@ static void Blur1DBuffer(openktg::core::pixel *dst, const openktg::core::pixel *
 void Blur(openktg::texture &input, const openktg::texture &inImg, float sizex, float sizey, int32_t order, int32_t wrapMode)
 {
     assert(texture_size_matches(input, inImg));
-    
 
     int32_t sizePixX = std::clamp(sizex, 0.0f, 1.0f) * 64 * inImg.width() / 2;
     int32_t sizePixY = std::clamp(sizey, 0.0f, 1.0f) * 64 * inImg.height() / 2;
