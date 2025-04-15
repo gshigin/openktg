@@ -19,11 +19,14 @@ endif()
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=native")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -flto")
 
-add_library(${PROJECT_NAME} 
-    src/legacy/gentexture.cpp
+add_library(${PROJECT_NAME}
     src/core/pixel.cpp
     src/core/matrix.cpp
     src/core/texture.cpp
+    src/tex/composite.cpp
+    src/tex/filters.cpp
+    src/tex/sampling.cpp
+    src/tex/generators.cpp
 )
 
 target_include_directories(${PROJECT_NAME} PUBLIC

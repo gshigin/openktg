@@ -74,4 +74,9 @@ void texture::resize(uint32_t new_width, uint32_t new_heigth)
     min_x_ = 1 << (24 - 1 - shift_x_);
     min_y_ = 1 << (24 - 1 - shift_y_);
 }
+auto texture_size_matches(const texture &x, const texture &y) -> bool
+{
+    return y.width() == x.width() && y.height() == x.height();
+}
+
 } // namespace openktg::inline core

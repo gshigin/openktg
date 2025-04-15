@@ -72,7 +72,7 @@ void Noise(openktg::texture &input, const openktg::texture &grad, int32_t freqX,
 void GlowRect(openktg::texture &input, const openktg::texture &bgTex, const openktg::texture &grad, float orgx, float orgy, float ux, float uy, float vx,
               float vy, float rectu, float rectv)
 {
-    assert(SizeMatchesWith(input, bgTex));
+    assert(texture_size_matches(input, bgTex));
 
     // copy background over (if we're not the background texture already)
     if (&input != &bgTex)

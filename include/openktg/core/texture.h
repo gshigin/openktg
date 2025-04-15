@@ -43,4 +43,6 @@ class texture
     uint32_t min_x_;   // (1 << 24) / (2 * width) = Min X for clamp to edge
     uint32_t min_y_;   // (1 << 24) / (2 * height) = Min X for clamp to edge
 };
+
+auto texture_size_matches(const openktg::texture &x, const openktg::texture &y) -> bool;
 } // namespace openktg::inline core

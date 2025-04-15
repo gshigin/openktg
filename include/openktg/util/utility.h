@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
-#include <concepts>
 #include <cstdint>
 
 namespace openktg::util
@@ -74,4 +73,10 @@ template <class T> OKTG(always_inline) auto square(T x) noexcept -> T
 {
     return x * x;
 }
+
+template <std::floating_point T> OKTG(always_inline) auto rsqrt(T x) noexcept -> T
+{
+    return 1 / std::sqrt(x);
+}
+
 } // namespace openktg::util

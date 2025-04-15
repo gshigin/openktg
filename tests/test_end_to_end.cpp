@@ -8,8 +8,9 @@
 #include <openktg/core/pixel.h>
 #include <openktg/core/texture.h>
 #include <openktg/core/types.h>
-#include <openktg/legacy/gentexture.h>
 #include <openktg/tex/procedural.h>
+#include <openktg/tex/composite.h>
+#include <openktg/tex/sampling.h>
 
 auto ReadImage(openktg::texture &img, const char *filename) -> bool
 {
@@ -170,9 +171,9 @@ TEST(EndToEndTest, Test)
         const auto &gen_pixel = *(generated.data() + i);
         const auto &ref_pixel = *(reference.data() + i);
 
-        ASSERT_EQ(gen_pixel.r() >> 8, ref_pixel.r() >> 8);
-        ASSERT_EQ(gen_pixel.g() >> 8, ref_pixel.g() >> 8);
-        ASSERT_EQ(gen_pixel.b() >> 8, ref_pixel.b() >> 8);
-        ASSERT_EQ(gen_pixel.a() >> 8, ref_pixel.a() >> 8);
+        EXPECT_EQ(gen_pixel.r() >> 8, ref_pixel.r() >> 8);
+        EXPECT_EQ(gen_pixel.g() >> 8, ref_pixel.g() >> 8);
+        EXPECT_EQ(gen_pixel.b() >> 8, ref_pixel.b() >> 8);
+        EXPECT_EQ(gen_pixel.a() >> 8, ref_pixel.a() >> 8);
     }
 }

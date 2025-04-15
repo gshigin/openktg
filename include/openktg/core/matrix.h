@@ -1,15 +1,12 @@
 #pragma once
 
 #include <array>
-#include <cmath>
 #include <span>
-#include <type_traits>
+
+#include <openktg/util/concepts.h>
 
 namespace openktg::inline core
 {
-
-template <typename T>
-concept arithmetic = std::is_arithmetic_v<T>;
 
 // Simple 4x4 matrix type
 template <arithmetic T> struct matrix44
@@ -86,3 +83,6 @@ template <arithmetic T> auto operator*(const matrix44<T> &m, const std::array<T,
     return result;
 }
 } // namespace openktg::inline core
+
+extern template struct openktg::matrix44<float>;
+extern template struct openktg::matrix44<int>;

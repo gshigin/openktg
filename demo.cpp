@@ -8,11 +8,11 @@
 #include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
 #include <openktg/core/texture.h>
-#include <openktg/legacy/gentexture.h>
 #include <openktg/tex/procedural.h>
+#include <openktg/tex/composite.h>
+#include <openktg/tex/sampling.h>
 
 #include <array>
-#include <cassert>
 #include <chrono>
 #include <fstream>
 #include <ratio>

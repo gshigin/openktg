@@ -4,8 +4,9 @@
 #include <openktg/core/pixel.h>
 #include <openktg/core/texture.h>
 #include <openktg/core/types.h>
-#include <openktg/legacy/gentexture.h>
 #include <openktg/tex/procedural.h>
+#include <openktg/tex/composite.h>
+#include <openktg/tex/sampling.h>
 
 static void BM_Demo(benchmark::State &state)
 {
