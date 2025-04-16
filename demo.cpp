@@ -7,11 +7,13 @@
 
 #include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
-#include <openktg/legacy/gentexture.h>
-#include <openktg/texture/procedural.h>
+#include <openktg/core/texture.h>
+#include <openktg/tex/composite.h>
+#include <openktg/tex/procedural.h>
+#include <openktg/tex/sampling.h>
+#include <openktg/util/utility.h>
 
 #include <array>
-#include <cassert>
 #include <chrono>
 #include <fstream>
 #include <ratio>
@@ -19,7 +21,7 @@
 #include <vector>
 
 // Save an image as .TGA file
-auto SaveImage(GenTexture &img, const char *filename) -> bool
+auto SaveImage(openktg::texture &img, const char *filename) -> bool
 {
     std::ofstream file(filename, std::ios::binary);
     if (!file)
@@ -31,25 +33,25 @@ auto SaveImage(GenTexture &img, const char *filename) -> bool
     std::array<std::uint8_t, 18> header = {};
     header.fill(0);
 
-    header[2] = 2;                // image type code 2 (RGB, uncompressed)
-    header[12] = img.XRes & 0xff; // width (low byte)
-    header[13] = img.XRes >> 8;   // width (high byte)
-    header[14] = img.YRes & 0xff; // height (low byte)
-    header[15] = img.YRes >> 8;   // height (high byte)
-    header[16] = 32;              // pixel size (bits)
+    header[2] = 2;                    // image type code 2 (RGB, uncompressed)
+    header[12] = img.width() & 0xff;  // width (low byte)
+    header[13] = img.width() >> 8;    // width (high byte)
+    header[14] = img.height() & 0xff; // height (low byte)
+    header[15] = img.height() >> 8;   // height (high byte)
+    header[16] = 32;                  // pixel size (bits)
 
     // write header
     file.write(reinterpret_cast<char *>(header.data()), header.size());
 
     // write image data
-    std::vector<std::uint8_t> lineBuf(img.XRes * 4);
-    for (sInt y = 0; y < img.YRes; y++)
+    std::vector<std::uint8_t> lineBuf(img.width() * 4);
+    for (int32_t y = 0; y < img.height(); y++)
     {
-        const openktg::pixel *in = &img.Data[y * img.XRes];
+        const openktg::pixel *in = &img.data()[y * img.width()];
 
         // convert a line of pixels (as simple as possible - no gamma correction
         // etc.)
-        for (sInt x = 0; x < img.XRes; x++)
+        for (int32_t x = 0; x < img.width(); x++)
         {
             lineBuf[x * 4 + 0] = in->b() >> 8;
             lineBuf[x * 4 + 1] = in->g() >> 8;
@@ -65,7 +67,7 @@ auto SaveImage(GenTexture &img, const char *filename) -> bool
     return true;
 }
 
-auto ReadImage(GenTexture &img, const char *filename) -> bool
+auto ReadImage(openktg::texture &img, const char *filename) -> bool
 {
     std::ifstream file(filename, std::ios::binary);
     if (!file)
@@ -89,15 +91,15 @@ auto ReadImage(GenTexture &img, const char *filename) -> bool
     int width = header[12] | (header[13] << 8);
     int height = header[14] | (header[15] << 8);
 
-    img.Init(width, height);
+    img.resize(width, height);
 
-    std::vector<uint8_t> lineBuf(img.XRes * 4);
-    for (int y = 0; y < img.YRes; ++y)
+    std::vector<uint8_t> lineBuf(img.width() * 4);
+    for (int y = 0; y < img.height(); ++y)
     {
         file.read(reinterpret_cast<char *>(lineBuf.data()), lineBuf.size());
 
-        openktg::pixel *out = &img.Data[y * img.XRes];
-        for (int x = 0; x < img.XRes; ++x)
+        openktg::pixel *out = &img.data()[y * img.width()];
+        for (int x = 0; x < img.width(); ++x)
         {
             *out = openktg::pixel{static_cast<openktg::red16_t>((lineBuf[x * 4 + 0] << 8) | lineBuf[x * 4 + 0]),
                                   static_cast<openktg::green16_t>((lineBuf[x * 4 + 1] << 8) | lineBuf[x * 4 + 1]),
@@ -113,8 +115,7 @@ auto ReadImage(GenTexture &img, const char *filename) -> bool
 int main()
 {
     using namespace openktg;
-    // initialize generator
-    InitTexgen();
+    using namespace openktg::util::constants;
 
     // colors
     openktg::pixel black{0xFF000000_argb};
@@ -123,14 +124,13 @@ int main()
     auto startTime = std::chrono::high_resolution_clock::now();
 
     // create gradients
-    GenTexture gradBW = LinearGradient(0xff000000, 0xffffffff);
-    GenTexture gradWB = LinearGradient(0xffffffff, 0xff000000);
-    GenTexture gradWhite = LinearGradient(0xffffffff, 0xffffffff);
+    texture gradBW = LinearGradient(0xff000000, 0xffffffff);
+    texture gradWB = LinearGradient(0xffffffff, 0xff000000);
+    texture gradWhite = LinearGradient(0xffffffff, 0xffffffff);
 
     // simple noise test texture
-    GenTexture noise;
-    noise.Init(256, 256);
-    noise.Noise(gradBW, 2, 2, 6, 0.5f, 123, GenTexture::NoiseDirect | GenTexture::NoiseBandlimit | GenTexture::NoiseNormalize);
+    texture noise(256, 256);
+    Noise(noise, gradBW, 2, 2, 6, 0.5f, 123, NoiseDirect | NoiseBandlimit | NoiseNormalize);
 
     if (!SaveImage(noise, "noise.tga"))
     {
@@ -139,14 +139,14 @@ int main()
     }
 
     // 4 "random voronoi" textures with different minimum distances
-    GenTexture voro[4];
-    static sInt voroIntens[4] = {37, 42, 37, 37};
-    static sInt voroCount[4] = {90, 132, 240, 255};
-    static sF32 voroDist[4] = {0.125f, 0.063f, 0.063f, 0.063f};
+    texture voro[4];
+    static int32_t voroIntens[4] = {37, 42, 37, 37};
+    static int32_t voroCount[4] = {90, 132, 240, 255};
+    static float voroDist[4] = {0.125f, 0.063f, 0.063f, 0.063f};
 
-    for (sInt i = 0; i < 4; i++)
+    for (int32_t i = 0; i < 4; i++)
     {
-        voro[i].Init(256, 256);
+        voro[i].resize(256, 256);
         RandomVoronoi(voro[i], gradWhite, voroIntens[i], voroCount[i], voroDist[i]);
 
         std::string name = "voron" + std::to_string(i) + ".tga";
@@ -160,18 +160,17 @@ int main()
 
     // linear combination of them
     LinearInput inputs[4];
-    for (sInt i = 0; i < 4; i++)
+    for (int32_t i = 0; i < 4; i++)
     {
         inputs[i].Tex = &voro[i];
         inputs[i].Weight = 1.5f;
         inputs[i].UShift = 0.0f;
         inputs[i].VShift = 0.0f;
-        inputs[i].FilterMode = GenTexture::WrapU | GenTexture::WrapV | GenTexture::FilterNearest;
+        inputs[i].FilterMode = WrapU | WrapV | FilterNearest;
     }
 
-    GenTexture baseTex;
-    baseTex.Init(256, 256);
-    baseTex.LinearCombine(black, 0.0f, inputs, 4);
+    texture baseTex(256, 256);
+    LinearCombine(baseTex, black, 0.0f, inputs, 4);
 
     if (!SaveImage(baseTex, "base_linear_combine.tga"))
     {
@@ -180,7 +179,7 @@ int main()
     }
 
     // blur it
-    baseTex.Blur(baseTex, 0.0074f, 0.0074f, 1, GenTexture::WrapU | GenTexture::WrapV);
+    Blur(baseTex, baseTex, 0.0074f, 0.0074f, 1, WrapU | WrapV);
 
     if (!SaveImage(baseTex, "base_linear_combine_blur.tga"))
     {
@@ -189,10 +188,8 @@ int main()
     }
 
     // add a noise layer
-    GenTexture noiseLayer;
-    noiseLayer.Init(256, 256);
-    noiseLayer.Noise(LinearGradient(0xff000000, 0xff646464), 4, 4, 5, 0.995f, 3,
-                     GenTexture::NoiseDirect | GenTexture::NoiseNormalize | GenTexture::NoiseBandlimit);
+    texture noiseLayer(256, 256);
+    Noise(noiseLayer, LinearGradient(0xff000000, 0xff646464), 4, 4, 5, 0.995f, 3, NoiseDirect | NoiseNormalize | NoiseBandlimit);
 
     if (!SaveImage(noiseLayer, "noise_layer.tga"))
     {
@@ -200,7 +197,7 @@ int main()
         return 1;
     }
 
-    baseTex.Paste(baseTex, noiseLayer, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, GenTexture::CombineAdd, 0);
+    Paste(baseTex, baseTex, noiseLayer, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, CombineAdd, 0);
 
     if (!SaveImage(baseTex, "base_plus_noise.tga"))
     {
@@ -218,27 +215,23 @@ int main()
     }
 
     // Create transform matrix for grid pattern
-    openktg::matrix44<float> m1, m2, m3;
-    MatTranslate(m1, -0.5f, -0.5f, 0.0f);
-    MatScale(m2, 3.0f * sSQRT2F, 3.0f * sSQRT2F, 1.0f);
-    MatMult(m3, m2, m1);
-    MatRotateZ(m1, 0.125f * sPI2F);
-    MatMult(m2, m1, m3);
-    MatTranslate(m1, 0.5f, 0.5f, 0.0f);
-    MatMult(m3, m1, m2);
+    auto m1 = matrix44<float>::translation(-0.5f, -0.5f, 0.0f);
+    auto m2 = matrix44<float>::scale(3.0f * SQRT2F, 3.0f * SQRT2F, 1.0f);
+    auto m3 = m2 * m1;
+    m1 = matrix44<float>::rotation_z(0.125f * PI2F);
+    m2 = m1 * m3;
+    m1 = matrix44<float>::translation(0.5f, 0.5f, 0.0f);
+    m3 = m1 * m2;
 
     // Grid pattern GlowRect
-    GenTexture rect1, rect1x, rect1n;
-    rect1.Init(256, 256);
-    rect1.LinearCombine(black, 1.0f, 0, 0); // black background
-    rect1.GlowRect(rect1, gradWB, 0.5f, 0.5f, 0.41f, 0.0f, 0.0f, 0.25f, 0.7805f, 0.64f);
+    texture rect1(256, 256), rect1x(256, 256), rect1n(256, 256);
+    LinearCombine(rect1, black, 1.0f, 0, 0); // black background
+    GlowRect(rect1, rect1, gradWB, 0.5f, 0.5f, 0.41f, 0.0f, 0.0f, 0.25f, 0.7805f, 0.64f);
 
-    rect1x.Init(256, 256);
-    rect1x.CoordMatrixTransform(rect1, m3, GenTexture::WrapU | GenTexture::WrapV | GenTexture::FilterBilinear);
+    CoordMatrixTransform(rect1x, rect1, m3, WrapU | WrapV | FilterBilinear);
 
     // Make a normalmap from it
-    rect1n.Init(256, 256);
-    rect1n.Derive(rect1x, GenTexture::DeriveNormals, 2.5f);
+    Derive(rect1n, rect1x, DeriveNormals, 2.5f);
 
     if (!SaveImage(rect1, "rect1.tga"))
     {
@@ -259,14 +252,11 @@ int main()
     }
 
     // Apply as bump map
-    GenTexture finalTex;
+    texture finalTex(256, 256);
     openktg::pixel amb{0xff101010_argb};
     openktg::pixel diff{0xffffffff_argb};
 
-    finalTex.Init(256, 256);
-    // amb.Init(0xff101010);
-    // diff.Init(0xffffffff);
-    finalTex.Bump(baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, sTRUE);
+    Bump(finalTex, baseTex, rect1n, 0, 0, 0.0f, 0.0f, 0.0f, -2.518f, 0.719f, -3.10f, amb, diff, true);
 
     if (!SaveImage(finalTex, "final.tga"))
     {
@@ -275,13 +265,11 @@ int main()
     }
 
     // Second grid pattern GlowRect
-    GenTexture rect2, rect2x;
-    rect2.Init(256, 256);
-    rect2.LinearCombine(white, 1.0f, 0, 0); // white background
-    rect2.GlowRect(rect2, gradBW, 0.5f, 0.5f, 0.36f, 0.0f, 0.0f, 0.20f, 0.8805f, 0.74f);
+    texture rect2(256, 256), rect2x(256, 256);
+    LinearCombine(rect2, white, 1.0f, 0, 0); // white background
+    GlowRect(rect2, rect2, gradBW, 0.5f, 0.5f, 0.36f, 0.0f, 0.0f, 0.20f, 0.8805f, 0.74f);
 
-    rect2x.Init(256, 256);
-    rect2x.CoordMatrixTransform(rect2, m3, GenTexture::WrapU | GenTexture::WrapV | GenTexture::FilterBilinear);
+    CoordMatrixTransform(rect2x, rect2, m3, WrapU | WrapV | FilterBilinear);
 
     if (!SaveImage(rect2, "rect2.tga"))
     {
@@ -296,7 +284,7 @@ int main()
     }
 
     // Multiply it over
-    finalTex.Paste(finalTex, rect2x, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, GenTexture::CombineMultiply, 0);
+    Paste(finalTex, finalTex, rect2x, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, CombineMultiply, 0);
 
     if (!SaveImage(finalTex, "finalfinal.tga"))
     {

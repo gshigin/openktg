@@ -5,25 +5,26 @@
 
 #include <openktg/core/matrix.h>
 #include <openktg/core/pixel.h>
-#include <openktg/core/types.h>
-#include <openktg/legacy/gentexture.h>
+#include <openktg/core/texture.h>
+#include <openktg/tex/filters.h>
+#include <openktg/tex/generators.h>
 #include <openktg/util/random.h>
 
 // Create a simple linear gradient texture
 // Input colors are 0xaarrggbb (not premultiplied!)
-static auto LinearGradient(sU32 startCol, sU32 endCol) -> GenTexture
+static auto LinearGradient(uint32_t startCol, uint32_t endCol) -> openktg::texture
 {
-    GenTexture tex;
+    openktg::texture tex(2, 1);
 
-    tex.Init(2, 1);
-    tex.Data[0] = openktg::pixel{static_cast<openktg::color32_t>(startCol)};
-    tex.Data[1] = openktg::pixel{static_cast<openktg::color32_t>(endCol)};
+    tex.at(0, 0) = openktg::pixel{static_cast<openktg::color32_t>(startCol)};
+    tex.at(1, 0) = openktg::pixel{static_cast<openktg::color32_t>(endCol)};
 
     return tex;
 }
 
 // Create a pattern of randomly colored voronoi cells
-static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensity, sInt maxCount, sF32 minDist, sInt seed = 0x339195BCC564A1E3)
+static void RandomVoronoi(openktg::texture &dest, const openktg::texture &grad, int32_t intensity, int32_t maxCount, float minDist,
+                          int32_t seed = 0x339195BCC564A1E3)
 {
     assert(maxCount <= 256);
     CellCenter centers[256];
@@ -32,7 +33,7 @@ static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensi
     std::uniform_real_distribution<float> distr(0.0f, 1.0f);
 
     // generate random center points
-    for (sInt i = 0; i < maxCount; i++)
+    for (int32_t i = 0; i < maxCount; i++)
     {
         int intens = intensity * distr(rng);
 
@@ -43,26 +44,26 @@ static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensi
     }
 
     // remove points too close together
-    sF32 minDistSq = minDist * minDist;
-    for (sInt i = 1; i < maxCount;)
+    float minDistSq = minDist * minDist;
+    for (int32_t i = 1; i < maxCount;)
     {
-        sF32 x = centers[i].x;
-        sF32 y = centers[i].y;
+        float x = centers[i].x;
+        float y = centers[i].y;
 
         // try to find a point closer than minDist
-        sInt j;
+        int32_t j;
         for (j = 0; j < i; j++)
         {
-            sF32 dx = centers[j].x - x;
-            sF32 dy = centers[j].y - y;
+            float dx = centers[j].x - x;
+            float dy = centers[j].y - y;
 
             if (dx < 0.0f)
                 dx += 1.0f;
             if (dy < 0.0f)
                 dy += 1.0f;
 
-            dx = sMin(dx, 1.0f - dx);
-            dy = sMin(dy, 1.0f - dy);
+            dx = std::min(dx, 1.0f - dx);
+            dy = std::min(dy, 1.0f - dy);
 
             if (dx * dx + dy * dy < minDistSq) // point is too close, stop
                 break;
@@ -75,27 +76,26 @@ static void RandomVoronoi(GenTexture &dest, const GenTexture &grad, sInt intensi
     }
 
     // generate the image
-    dest.Cells(grad, centers, maxCount, 0.0f, GenTexture::CellInner);
+    Cells(dest, grad, centers, maxCount, 0.0f, CellInner);
 }
 
 // Transforms a grayscale image to a colored one with a matrix transform
-static void Colorize(GenTexture &img, sU32 startCol, sU32 endCol)
+static void Colorize(openktg::texture &img, uint32_t startCol, uint32_t endCol)
 {
     openktg::matrix44<float> m;
     openktg::pixel s{static_cast<openktg::color32_t>(startCol)};
     openktg::pixel e{static_cast<openktg::color32_t>(endCol)};
 
     // calculate matrix
-    // sSetMem(m, 0, sizeof(m));
     m.data.fill(0);
-    m.get(0, 0) = (e.r() - s.r()) / 65535.0f;
-    m.get(1, 1) = (e.g() - s.g()) / 65535.0f;
-    m.get(2, 2) = (e.b() - s.b()) / 65535.0f;
-    m.get(3, 3) = 1.0f;
-    m.get(0, 3) = s.r() / 65535.0f;
-    m.get(1, 3) = s.g() / 65535.0f;
-    m.get(2, 3) = s.b() / 65535.0f;
+    m(0, 0) = (e.r() - s.r()) / 65535.0f;
+    m(1, 1) = (e.g() - s.g()) / 65535.0f;
+    m(2, 2) = (e.b() - s.b()) / 65535.0f;
+    m(3, 3) = 1.0f;
+    m(0, 3) = s.r() / 65535.0f;
+    m(1, 3) = s.g() / 65535.0f;
+    m(2, 3) = s.b() / 65535.0f;
 
     // transform
-    img.ColorMatrixTransform(img, m, sTRUE);
+    ColorMatrixTransform(img, img, m, true);
 }

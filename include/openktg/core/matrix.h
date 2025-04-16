@@ -1,68 +1,88 @@
 #pragma once
 
 #include <array>
-#include <type_traits>
+#include <span>
 
-#include <openktg/core/pixel.h>
-#include <openktg/core/types.h>
+#include <openktg/util/concepts.h>
 
 namespace openktg::inline core
 {
 
 // Simple 4x4 matrix type
-template <typename T>
-    requires std::is_arithmetic_v<T>
-struct matrix44
+template <arithmetic T> struct matrix44
 {
-    std::array<T, 16> data;
+    std::array<T, 16> data; // row-major
 
-    auto get(size_t i, size_t j) -> T &
+    matrix44() = default;
+    explicit matrix44(T value)
     {
-        return data[4 * i + j];
+        data.fill(value);
     }
-    [[nodiscard]] auto get(size_t i, size_t j) const -> const T &
-    {
-        return data[4 * i + j];
-    }
+    matrix44(std::initializer_list<T> init);
+
+    auto operator()(size_t i, size_t j) noexcept -> T &;
+    auto operator()(size_t i, size_t j) const noexcept -> const T &;
+
+    auto row(size_t i) noexcept -> std::span<T, 4>;
+    auto row(size_t i) const noexcept -> std::span<const T, 4>;
+
+    auto column(size_t j) const -> std::array<T, 4>;
+
+    static auto identity() noexcept -> matrix44;
+    static auto zero() noexcept -> matrix44;
+    static auto scale(T sx, T sy, T sz) noexcept -> matrix44;
+    static auto translation(T tx, T ty, T tz) noexcept -> matrix44;
+    static auto rotation_z(T angle) noexcept -> matrix44;
+    auto transpose() const -> matrix44;
+
+    auto operator+=(const matrix44 &rhs) -> matrix44 &;
+    auto operator-=(const matrix44 &rhs) -> matrix44 &;
+    auto operator*=(T scalar) -> matrix44 &;
+    auto operator/=(T scalar) -> matrix44 &;
 };
 
-// 4x4 matrix multiply
-static void MatMult(openktg::matrix44<float> &dest, const openktg::matrix44<float> &a, const openktg::matrix44<float> &b)
+template <arithmetic T> auto operator+(matrix44<T> lhs, const matrix44<T> &rhs) -> matrix44<T>
 {
-    for (sInt i = 0; i < 4; i++)
-        for (sInt j = 0; j < 4; j++)
-            dest.get(i, j) = a.get(i, 0) * b.get(0, j) + a.get(i, 1) * b.get(1, j) + a.get(i, 2) * b.get(2, j) + a.get(i, 3) * b.get(3, j);
+    return lhs += rhs;
 }
 
-// Create a scaling matrix
-static void MatScale(openktg::matrix44<float> &dest, sF32 sx, sF32 sy, sF32 sz)
+template <arithmetic T> auto operator-(matrix44<T> lhs, const matrix44<T> &rhs) -> matrix44<T>
 {
-    dest.data.fill(0);
-    dest.get(0, 0) = sx;
-    dest.get(1, 1) = sy;
-    dest.get(2, 2) = sz;
-    dest.get(3, 3) = 1.0f;
+    return lhs -= rhs;
 }
 
-// Create a translation matrix
-static void MatTranslate(openktg::matrix44<float> &dest, sF32 tx, sF32 ty, sF32 tz)
+template <arithmetic T> auto operator*(const matrix44<T> &a, const matrix44<T> &b) -> matrix44<T>
 {
-    MatScale(dest, 1.0f, 1.0f, 1.0f);
-    dest.get(3, 0) = tx;
-    dest.get(3, 1) = ty;
-    dest.get(3, 2) = tz;
+    matrix44<T> result;
+    for (size_t i = 0; i < 4; ++i)
+        for (size_t j = 0; j < 4; ++j)
+            result(i, j) = a(i, 0) * b(0, j) + a(i, 1) * b(1, j) + a(i, 2) * b(2, j) + a(i, 3) * b(3, j);
+    return result;
 }
 
-// Create a z-axis rotation matrix
-static void MatRotateZ(openktg::matrix44<float> &dest, sF32 angle)
+template <arithmetic T> auto operator*(matrix44<T> m, T scalar) -> matrix44<T>
 {
-    sF32 s = sFSin(angle);
-    sF32 c = sFCos(angle);
+    return m *= scalar;
+}
 
-    MatScale(dest, 1.0f, 1.0f, 1.0f);
-    dest.get(0, 0) = c;
-    dest.get(0, 1) = s;
-    dest.get(1, 0) = -s;
-    dest.get(1, 1) = c;
+template <arithmetic T> auto operator*(T scalar, matrix44<T> m) -> matrix44<T>
+{
+    return m *= scalar;
+}
+
+template <arithmetic T> auto operator/(matrix44<T> m, T scalar) -> matrix44<T>
+{
+    return m /= scalar;
+}
+
+template <arithmetic T> auto operator*(const matrix44<T> &m, const std::array<T, 4> &v) -> std::array<T, 4>
+{
+    std::array<T, 4> result;
+    for (size_t i = 0; i < 4; ++i)
+        result[i] = m(i, 0) * v[0] + m(i, 1) * v[1] + m(i, 2) * v[2] + m(i, 3) * v[3];
+    return result;
 }
 } // namespace openktg::inline core
+
+extern template struct openktg::matrix44<float>;
+extern template struct openktg::matrix44<int>;
