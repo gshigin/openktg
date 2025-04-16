@@ -86,7 +86,7 @@ template <class T> OKTG(always_inline) auto square(T x) noexcept -> T
     return x * x;
 }
 
-template <std::floating_point T> OKTG(always_inline) auto rsqrt(T x) noexcept -> T
+OKTG(always_inline) auto rsqrt(double x) noexcept -> double
 {
     return 1 / std::sqrt(x);
 }
