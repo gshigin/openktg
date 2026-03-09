@@ -1,32 +1,32 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.27)
+project(openktg)
 
-if (NOT DEFINED CMAKE_CXX_STANDARD)
-  set(CMAKE_CXX_STANDARD 20)
-endif()
+set(CMAKE_CXX_STANDARD 23)
 
-set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
+
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}" CACHE INTERNAL "")
+
+add_subdirectory(external)
 
 project(openktg
-    VERSION 1.0.0 
+    VERSION 0.0.0 
     LANGUAGES CXX
 )
 
-add_library(${PROJECT_NAME} 
+add_library(openktg
     src/gentexture.cpp
 )
 
-target_include_directories(${PROJECT_NAME} PUBLIC
+target_include_directories(openktg PUBLIC
   $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
 
-# install(TARGETS OpenKTG ARCHIVE DESTINATION lib)
-# install(FILES ${openKTG_HEADERS} DESTINATION include/OpenKTG)
-
-# set(openKTG_DOC_FILES LICENSE README.txt)
-# install(FILES ${openKTG_DOC_FILES} DESTINATION share/doc/OpenKTG)
-
-#
 # demo executable
 add_executable(demo demo.cpp)
 target_link_libraries(demo openktg)
+
+add_executable(main main.cpp)
+target_link_libraries(main PRIVATE SDL3_image::SDL3_image SDL3::SDL3 imgui openktg)
